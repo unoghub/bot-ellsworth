@@ -2,8 +2,13 @@
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
-    "rootDir": "./src",
+    "rootDir": "./",
     "outDir": "./dist",
+
+    "paths": {
+      "@/*": ["./src/*"],
+      "@config": ["./config.ts"]
+    },
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
@@ -20,9 +25,14 @@
     "declaration": true,
     "declarationMap": true,
 
+    // JSON
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+
     // Stricter Typechecking Options
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
+    "strictPropertyInitialization": false,
 
     // Style Options
     // "noImplicitReturns": true,
@@ -41,6 +51,6 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "scripts/**/*", "config.ts"],
   "exclude": ["node_modules"]
 }

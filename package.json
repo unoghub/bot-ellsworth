@@ -17,7 +17,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node ."
+    "start": "node .",
+    "deploy": "tsx scripts/deploy-commands.js"
   },
   "devDependencies": {
     "tsx": "^4.22.4",
