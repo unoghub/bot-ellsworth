@@ -1,4 +1,4 @@
-import config from "@config";
+import { env } from "./env.js";
 import { Client, Collection, Events, GatewayIntentBits } from "discord.js";
 
 import fs from "fs";
@@ -60,4 +60,4 @@ process.on("SIGINT", async () => {
   process.exit(0);
 });
 
-client.login(config.token);
+client.login(env.TOKEN);
