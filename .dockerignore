@@ -1,0 +1,23 @@
+node_modules
+dist
+build
+
+#Dotfiles
+.git
+.env
+.env*
+.prettierrc
+.vscode
+
+#Documentation Files
+README.md
+CONTRIBUTING.md
+
+#Log Files
+npm-debug.log
+yarn-error.log
+*.log
+
+#Docker files
+Dockerfile
+docker-compose.yml
