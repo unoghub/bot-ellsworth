@@ -1,15 +1,7 @@
 import { env } from "./env.js";
 import { Client, Collection, Events, GatewayIntentBits } from "discord.js";
-
-import fs from "fs";
-import { pathToFileURL } from "url";
-import { join } from "path";
-
-declare module "discord.js" {
-  export interface Client {
-    commands: Collection<unknown, any>;
-  }
-}
+import commandsIndex from "./commands/index.js";
+import type { CommandHandler } from "./command.js";
 
 const client = new Client({
   intents: [
@@ -18,17 +10,10 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
   ],
 });
-client.commands = new Collection();
+var commands = new Collection<string, CommandHandler>();
 
-const commandsFolderPath: string = join(import.meta.dirname, "commands");
-const commandsFiles: string[] = fs.readdirSync(commandsFolderPath);
-
-for (const file of commandsFiles) {
-  const filePath = join(commandsFolderPath, file);
-
-  const { default: command } = await import(pathToFileURL(filePath).href);
-
-  client.commands.set(command.data.name, command.execute);
+for (const command of commandsIndex) {
+  commands.set(command.data.name, command.execute);
 }
 
 client.on(Events.ClientReady, (readyClient) => {
@@ -38,7 +23,7 @@ client.on(Events.ClientReady, (readyClient) => {
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
-  const execute = interaction.client.commands.get(interaction.commandName);
+  const execute = commands.get(interaction.commandName);
 
   if (!execute) {
     console.error("No matching command found!");
@@ -55,7 +40,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 process.on("SIGINT", async () => {
   console.log("Goodbye, Ellsworth!");
 
-  client.user?.setStatus("invisible");
+  client.user?.setPresence({ status: "invisible" });
   client.destroy();
   process.exit(0);
 });

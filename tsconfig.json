@@ -47,10 +47,11 @@
     "skipLibCheck": true
   },
   "include": [
-    "src"
+    "src/**/*"
   ],
   "exclude": [
     "scripts",
-    "node_modules"
+    "node_modules",
+    "dist"
   ]
 }

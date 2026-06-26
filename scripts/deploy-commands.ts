@@ -24,7 +24,7 @@ const rest = new REST().setToken(env.TOKEN);
   try {
     console.log(`Refreshing ${commands.length} application (/) commands.`);
 
-    const data = await rest.put(
+    await rest.put(
       Routes.applicationGuildCommands(env.CLIENT_ID, env.GUILD_ID),
       { body: commands },
     );
