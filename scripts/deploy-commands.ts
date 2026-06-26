@@ -1,22 +1,9 @@
-import { env } from "@/env.js";
+import { env } from "../src/env.js";
 import { REST, Routes } from "discord.js";
 
-import fs from "fs";
-import path from "path";
-import { pathToFileURL } from "url";
+import commandsIndex from "../src/commands/index.js";
 
-const commands: any[] = [];
-
-const commandsFolderPath = path.join(import.meta.dirname, "../src/commands");
-const commandsFiles = fs.readdirSync(commandsFolderPath);
-
-for (const file of commandsFiles) {
-  const filePath = path.join(commandsFolderPath, file);
-
-  const { default: command } = await import(pathToFileURL(filePath).href);
-
-  commands.push(command.data.toJSON());
-}
+const commands = commandsIndex.map((cmd) => cmd.data.toJSON());
 
 const rest = new REST().setToken(env.TOKEN);
 
