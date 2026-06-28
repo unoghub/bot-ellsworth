@@ -3,3 +3,7 @@ config.ts
 
 node_modules/
 dist/
+
+data/
+
+gamejam_db.json

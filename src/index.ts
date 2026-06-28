@@ -1,16 +1,12 @@
 import { env } from "./env.js";
-import { Client, Collection, Events, GatewayIntentBits } from "discord.js";
+import { BaseInteraction, Events, type Interaction } from "discord.js";
 import commandsIndex from "./commands/index.js";
-import type { CommandHandler } from "./command.js";
+import type { BaseHandler, CommandHandler } from "./types/handlers.js";
+import { client } from "./services/client.js";
+import { setup } from "./services/gamejam_service.js";
+import buttonRegistry from "./services/buttonRegistry.js";
 
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ],
-});
-var commands = new Collection<string, CommandHandler>();
+const commands = new Map<string, CommandHandler>();
 
 for (const command of commandsIndex) {
   commands.set(command.data.name, command.execute);
@@ -18,22 +14,18 @@ for (const command of commandsIndex) {
 
 client.on(Events.ClientReady, (readyClient) => {
   console.log(`Logged in as ${readyClient.user.tag}!`);
+  setup();
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
-
-  const execute = commands.get(interaction.commandName);
-
-  if (!execute) {
-    console.error("No matching command found!");
-    return;
+  if (interaction.isChatInputCommand()) {
+    const handler = commands.get(interaction.commandName);
+    return handler?.(interaction);
   }
 
-  try {
-    await execute(interaction);
-  } catch (error) {
-    console.error(error);
+  if (interaction.isButton()) {
+    const handler = buttonRegistry.get(interaction.customId);
+    return handler?.(interaction);
   }
 });
 
