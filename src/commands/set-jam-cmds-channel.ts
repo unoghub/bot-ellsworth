@@ -3,6 +3,7 @@ import { type Command } from "@/types/command.js";
 import {
   ChannelType,
   MessageFlags,
+  PermissionFlagsBits,
   SlashCommandBuilder,
   TextChannel,
 } from "discord.js";
@@ -11,10 +12,12 @@ export default {
   data: new SlashCommandBuilder()
     .setName("set-jam-cmds-channel")
     .setDescription("Set jam commands channel.")
+    .setDefaultMemberPermissions(PermissionFlagsBits.CreateEvents)
     .addChannelOption((option) =>
       option
         .setName("channel")
         .setDescription("Must be a text channel")
+        .addChannelTypes(ChannelType.GuildText)
         .setRequired(true),
     ),
   async execute(interaction) {
@@ -28,7 +31,7 @@ export default {
       return;
     }
 
-    setGameJamCmdsChannel(channel as TextChannel);
+    await setGameJamCmdsChannel(channel as TextChannel);
 
     interaction.reply({
       content: "Channel set",

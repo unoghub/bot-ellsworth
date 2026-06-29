@@ -4,6 +4,7 @@ import {
   ChannelType,
   ForumChannel,
   MessageFlags,
+  PermissionFlagsBits,
   SlashCommandBuilder,
 } from "discord.js";
 
@@ -11,6 +12,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("set-jam-teams-channel")
     .setDescription("Set jam teams channel.")
+    .setDefaultMemberPermissions(PermissionFlagsBits.CreateEvents)
     .addChannelOption((option) =>
       option
         .setName("channel")
@@ -29,7 +31,7 @@ export default {
       return;
     }
 
-    setGameJamTeamsChannel(channel as ForumChannel);
+    await setGameJamTeamsChannel(channel as ForumChannel);
 
     interaction.reply({
       content: "Channel set",
