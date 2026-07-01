@@ -3,7 +3,6 @@ import { BaseInteraction, Events, type Interaction } from "discord.js";
 import commandsIndex from "./commands/index.js";
 import type { BaseHandler, CommandHandler } from "./types/handlers.js";
 import { client } from "./services/client.js";
-import { setup } from "./services/gamejam_service.js";
 import buttonRegistry from "./services/buttonRegistry.js";
 
 const commands = new Map<string, CommandHandler>();
@@ -14,7 +13,6 @@ for (const command of commandsIndex) {
 
 client.on(Events.ClientReady, (readyClient) => {
   console.log(`Logged in as ${readyClient.user.tag}!`);
-  setup();
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
