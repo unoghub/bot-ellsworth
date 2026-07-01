@@ -1,4 +1,4 @@
-import { setJammerRole } from "@/services/gamejam_data.js";
+import { GamejamData } from "@/services/gamejam_data.js";
 import type { Command } from "@/types/command.js";
 import {
   MessageFlags,
@@ -26,7 +26,7 @@ export default {
       return;
     }
 
-    await setJammerRole(role);
+    GamejamData.JammerRole.set(role);
 
     interaction.reply({
       content: "Role set",

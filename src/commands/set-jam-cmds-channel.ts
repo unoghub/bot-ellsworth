@@ -1,4 +1,5 @@
-import { setGameJamCmdsChannel } from "@/services/gamejam_data.js";
+import { GamejamData } from "@/services/gamejam_data.js";
+import { setup_jam_view } from "@/services/gamejam_service.js";
 import { type Command } from "@/types/command.js";
 import {
   ChannelType,
@@ -31,7 +32,9 @@ export default {
       return;
     }
 
-    await setGameJamCmdsChannel(channel as TextChannel);
+    GamejamData.Menu.Channel.set(channel as TextChannel);
+
+    setup_jam_view();
 
     interaction.reply({
       content: "Channel set",

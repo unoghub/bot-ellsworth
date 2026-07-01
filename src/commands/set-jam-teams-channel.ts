@@ -1,4 +1,4 @@
-import { setGameJamTeamsChannel } from "@/services/gamejam_data.js";
+import { GamejamData } from "@/services/gamejam_data.js";
 import { type Command } from "@/types/command.js";
 import {
   ChannelType,
@@ -31,7 +31,7 @@ export default {
       return;
     }
 
-    await setGameJamTeamsChannel(channel as ForumChannel);
+    GamejamData.TeamsList.Channel.set(channel as ForumChannel);
 
     interaction.reply({
       content: "Channel set",
