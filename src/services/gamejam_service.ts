@@ -1,6 +1,7 @@
 import { Events, TextChannel } from "discord.js";
 import { client } from "./client.js";
 import { GamejamData } from "./gamejam_data.js";
+import { GamejamMenu } from "@/content/gamejam_content.js";
 
 export async function setup_teams_view() {}
 
@@ -11,12 +12,12 @@ export async function setup_jam_view() {
 
   if (!channel) return;
 
-  var message = await GamejamData.Menu.Message.get();
+  var fetched_message = await GamejamData.Menu.Message.get();
 
-  if (!message) {
-    message = await channel.send({
-      content: "pluh",
-    });
-    GamejamData.Menu.Message.set(message);
+  if (!fetched_message) {
+    const updated_message = await channel.send(GamejamMenu);
+    GamejamData.Menu.Message.set(updated_message);
+  } else {
+    await fetched_message.edit(GamejamMenu);
   }
 }

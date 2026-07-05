@@ -4,6 +4,7 @@ import commandsIndex from "./commands/index.js";
 import type { BaseHandler, CommandHandler } from "./types/handlers.js";
 import { client } from "./services/client.js";
 import buttonRegistry from "./services/buttonRegistry.js";
+import modalRegistry from "./services/modalRegistry.js";
 
 const commands = new Map<string, CommandHandler>();
 
@@ -23,6 +24,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   if (interaction.isButton()) {
     const handler = buttonRegistry.get(interaction.customId);
+    return handler?.(interaction);
+  }
+
+  if (interaction.isModalSubmit()) {
+    const handler = modalRegistry.get(interaction.customId);
     return handler?.(interaction);
   }
 });

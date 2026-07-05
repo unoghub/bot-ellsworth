@@ -12,7 +12,9 @@ db.exec(`
   );
   
   CREATE TABLE IF NOT EXISTS participants (
-    id TEXT PRIMARY KEY
+    id TEXT PRIMARY KEY,
+    legal_name TEXT NOT NULL,
+
   );
   
   CREATE TABLE IF NOT EXISTS jammer_blacklist (

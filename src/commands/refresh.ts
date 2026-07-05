@@ -5,7 +5,7 @@ import { MessageFlags, SlashCommandBuilder } from "discord.js";
 export default {
   data: new SlashCommandBuilder()
     .setName("refresh")
-    .setDescription("Check ping."),
+    .setDescription("Force update cycle."),
   async execute(interaction) {
     setup_jam_view();
     interaction.reply({
