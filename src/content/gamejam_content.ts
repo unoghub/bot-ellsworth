@@ -1,4 +1,5 @@
 import buttonRegistry from "@/services/buttonRegistry.js";
+import { GamejamData } from "@/services/gamejam_data.js";
 import modalRegistry from "@/services/modalRegistry.js";
 import {
   ActionRowBuilder,
@@ -17,6 +18,14 @@ const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     .setCustomId("join_jam")
     .setLabel("Join the Game Jam")
     .setStyle(ButtonStyle.Primary),
+  new ButtonBuilder()
+    .setCustomId("create_jam_team")
+    .setLabel("Create a Jam team")
+    .setStyle(ButtonStyle.Secondary),
+  new ButtonBuilder()
+    .setCustomId("leave_jam")
+    .setLabel("Leave the Jam")
+    .setStyle(ButtonStyle.Danger),
 );
 
 buttonRegistry.set("join_jam", async (interaction) => {
@@ -39,10 +48,26 @@ buttonRegistry.set("join_jam", async (interaction) => {
 });
 
 modalRegistry.set("join_jam", async (interaction) => {
-  const name = interaction.fields.getTextInputValue("nameInput");
+  const legal_name = interaction.fields.getTextInputValue("nameInput");
 
-  console.log(name);
-  interaction.reply({ content: name, flags: MessageFlags.Ephemeral });
+  const role = await GamejamData.JammerRole.get();
+  const guild = interaction.guild;
+  if (role && guild) {
+    const member = await guild.members.fetch(interaction.user.id);
+
+    if (member && member.roles) {
+      await member.roles.add(role);
+    }
+  }
+
+  GamejamData.Participants.set(interaction.user, {
+    legal_name: legal_name,
+  });
+
+  interaction.reply({
+    content: "Successfully joined the game jam.",
+    flags: MessageFlags.Ephemeral,
+  });
 });
 
 export const GamejamMenu = {

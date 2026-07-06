@@ -1,7 +1,8 @@
-import { ChannelType, DiscordAPIError } from "discord.js";
+import { ChannelType, DiscordAPIError, User } from "discord.js";
 import { client } from "./client.js";
 
-import { DatabaseSync } from "node:sqlite";
+import { DatabaseSync, type SQLOutputValue } from "node:sqlite";
+import { boolean } from "zod";
 
 const db = new DatabaseSync("data/gamejam.db");
 
@@ -13,7 +14,7 @@ db.exec(`
   
   CREATE TABLE IF NOT EXISTS participants (
     id TEXT PRIMARY KEY,
-    legal_name TEXT NOT NULL,
+    legal_name TEXT NOT NULL
 
   );
   
@@ -23,16 +24,26 @@ db.exec(`
   );
   
   CREATE TABLE IF NOT EXISTS jam_teams (
-    team_name TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY,
+    team_name TEXT NOT NULL,
     control_channel TEXT NOT NULL,
     buttons_message TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS team_members (
+    team_id TEXT NOT NULL,
+    user_id TEXT NOT NULL UNIQUE,
+    
+    PRIMARY KEY (team_id, user_id),
+
+    FOREIGN KEY (team_id) REFERENCES jam_teams(id),
+    FOREIGN KEY (user_id) REFERENCES participants(id)
   );
 `);
 
 function getConfig(key: string): string | null {
   const row = db.prepare("SELECT value FROM config WHERE key = ?").get(key) as
-    | { value: string }
-    | undefined;
+    { value: string } | undefined;
   return row?.value ?? null;
 }
 
@@ -72,6 +83,14 @@ export const GamejamData = {
       fetchChannel(id, ChannelType.GuildForum),
     ),
   },
+  Participants: createUserTableAccessor<{
+    legal_name: string;
+  }>("participants"),
+
+  Blacklist: createUserTableAccessor<{
+    reason: string | null;
+  }>("jammer_blacklist"),
+  ready: true,
 };
 
 type DiscordAccessor<T> = {
@@ -91,6 +110,39 @@ function createDiscordAccessor<T extends { id: string }>(
     },
     async set(value: T) {
       setConfig(key, value.id);
+    },
+  };
+}
+
+function createUserTableAccessor<T extends Record<string, SQLOutputValue>>(
+  table: string,
+) {
+  return {
+    set(user: User, values: T) {
+      const columns = Object.keys(values);
+      const params = Object.values(values);
+
+      const sql = `
+        INSERT INTO ${table}
+          (id, ${columns.join(", ")})
+        VALUES
+          (?, ${columns.map(() => "?").join(", ")})
+        ON CONFLICT(id) DO UPDATE SET
+          ${columns.map((c) => `${c} = excluded.${c}`).join(", ")}
+      `;
+
+      db.prepare(sql).run(user.id, ...params);
+    },
+
+    get(user: User): ({ id: string } & T) | null {
+      return (
+        (db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(user.id) as
+          ({ id: string } & T) | undefined) ?? null
+      );
+    },
+
+    remove(user: User) {
+      db.prepare(`DELETE FROM ${table} WHERE id = ?`).run(user.id);
     },
   };
 }
