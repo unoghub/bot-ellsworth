@@ -1,15 +1,15 @@
 import { env } from "./env.js";
-import { BaseInteraction, Events, type Interaction } from "discord.js";
+import { Events } from "discord.js";
 import commandsIndex from "./commands/index.js";
-import type { BaseHandler, CommandHandler } from "./types/handlers.js";
 import { client } from "./services/client.js";
-import buttonRegistry from "./services/buttonRegistry.js";
-import modalRegistry from "./services/modalRegistry.js";
-
-const commands = new Map<string, CommandHandler>();
+import {
+  buttonRegistry,
+  commandsRegistry,
+  modalRegistry,
+} from "./services/registry.js";
 
 for (const command of commandsIndex) {
-  commands.set(command.data.name, command.execute);
+  commandsRegistry.set(command.data.name, command.execute);
 }
 
 client.on(Events.ClientReady, (readyClient) => {
@@ -18,7 +18,7 @@ client.on(Events.ClientReady, (readyClient) => {
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (interaction.isChatInputCommand()) {
-    const handler = commands.get(interaction.commandName);
+    const handler = commandsRegistry.get(interaction.commandName);
     return handler?.(interaction);
   }
 

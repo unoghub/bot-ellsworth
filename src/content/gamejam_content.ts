@@ -1,6 +1,10 @@
-import buttonRegistry from "@/services/buttonRegistry.js";
 import { GamejamData } from "@/services/gamejam_data.js";
-import modalRegistry from "@/services/modalRegistry.js";
+import {
+  addJammerRoleToUser,
+  removeJammerRoleFromUser,
+} from "@/services/gamejam_roles.js";
+import { create_team_thread } from "@/services/gamejam_teams.js";
+import { buttonRegistry, modalRegistry } from "@/services/registry.js";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -12,21 +16,6 @@ import {
   TextInputStyle,
   type MessageCreateOptions,
 } from "discord.js";
-
-const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-  new ButtonBuilder()
-    .setCustomId("join_jam")
-    .setLabel("Join the Game Jam")
-    .setStyle(ButtonStyle.Primary),
-  new ButtonBuilder()
-    .setCustomId("create_jam_team")
-    .setLabel("Create a Jam team")
-    .setStyle(ButtonStyle.Secondary),
-  new ButtonBuilder()
-    .setCustomId("leave_jam")
-    .setLabel("Leave the Jam")
-    .setStyle(ButtonStyle.Danger),
-);
 
 buttonRegistry.set("join_jam", async (interaction) => {
   await interaction.showModal(
@@ -49,28 +38,110 @@ buttonRegistry.set("join_jam", async (interaction) => {
 
 modalRegistry.set("join_jam", async (interaction) => {
   const legal_name = interaction.fields.getTextInputValue("nameInput");
-
-  const role = await GamejamData.JammerRole.get();
-  const guild = interaction.guild;
-  if (role && guild) {
-    const member = await guild.members.fetch(interaction.user.id);
-
-    if (member && member.roles) {
-      await member.roles.add(role);
-    }
-  }
+  const old_data = GamejamData.Participants.get(interaction.user);
 
   GamejamData.Participants.set(interaction.user, {
     legal_name: legal_name,
   });
 
+  addJammerRoleToUser(interaction, interaction.user);
+
+  if (old_data) {
+    interaction.reply({
+      content: "Successfully updated your game jam information.",
+      flags: MessageFlags.Ephemeral,
+    });
+  } else {
+    interaction.reply({
+      content: "Successfully joined the game jam.",
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+});
+
+buttonRegistry.set("leave_jam", async (interaction) => {
+  const old_data = GamejamData.Participants.get(interaction.user);
+  if (!old_data) {
+    interaction.reply({
+      content: "You are not currently a participant in the game jam.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  GamejamData.Participants.remove(interaction.user);
+  removeJammerRoleFromUser(interaction, interaction.user);
+
   interaction.reply({
-    content: "Successfully joined the game jam.",
+    content: "Successfully left the game jam.",
     flags: MessageFlags.Ephemeral,
+  });
+});
+
+buttonRegistry.set("create_jam_team", async (interaction) => {
+  if (GamejamData.Participants.user_in_a_team(interaction.user)) {
+    interaction.reply({
+      content: "You are already in a team. You cannot create a new team.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+  await interaction.showModal(
+    new ModalBuilder()
+      .setCustomId("create_jam_team")
+      .setTitle("Create Team")
+      .addLabelComponents(
+        new LabelBuilder()
+          .setLabel("Team Name")
+          .setDescription("Team Name")
+          .setTextInputComponent(
+            new TextInputBuilder()
+              .setCustomId("team_name")
+              .setStyle(TextInputStyle.Short)
+              .setRequired(true),
+          ),
+      ),
+  );
+});
+
+modalRegistry.set("create_jam_team", async (interaction) => {
+  const team_name = interaction.fields.getTextInputValue("team_name");
+  if (GamejamData.Participants.user_in_a_team(interaction.user)) {
+    interaction.reply({
+      content: "You are already in a team. You cannot create a new team.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  const [thread, message] = await create_team_thread({
+    owner: interaction.user,
+    team_name,
+  });
+  GamejamData.Teams.create_team({
+    owner: interaction.user,
+    team_name,
+    control_message: message,
+    thread,
   });
 });
 
 export const GamejamMenu = {
   content: "Welcome to the game jam and stuff",
-  components: [row],
+  components: [
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId("join_jam")
+        .setLabel("Join the Game Jam")
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId("create_jam_team")
+        .setLabel("Create a Jam team")
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId("leave_jam")
+        .setLabel("Leave the Jam")
+        .setStyle(ButtonStyle.Danger),
+    ),
+  ],
 } satisfies MessageCreateOptions;

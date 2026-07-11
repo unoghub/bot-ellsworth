@@ -1,4 +1,3 @@
-import { setup_jam_view } from "@/services/gamejam_service.js";
 import { type Command } from "@/types/command.js";
 import { MessageFlags, SlashCommandBuilder } from "discord.js";
 
@@ -7,7 +6,6 @@ export default {
     .setName("refresh")
     .setDescription("Force update cycle."),
   async execute(interaction) {
-    setup_jam_view();
     interaction.reply({
       content: "Refreshed!",
       flags: MessageFlags.Ephemeral,
