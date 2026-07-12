@@ -1,5 +1,5 @@
 import { env } from "./env.js";
-import { Events } from "discord.js";
+import { Events, MessageFlags } from "discord.js";
 import commandsIndex from "./commands/index.js";
 import { client } from "./services/client.js";
 import {
@@ -17,19 +17,41 @@ client.on(Events.ClientReady, (readyClient) => {
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
-  if (interaction.isChatInputCommand()) {
-    const handler = commandsRegistry.get(interaction.commandName);
-    return handler?.(interaction);
-  }
+  try {
+    if (interaction.isChatInputCommand()) {
+      const handler = commandsRegistry.get(interaction.commandName);
+      return await handler?.(interaction);
+    }
 
-  if (interaction.isButton()) {
-    const handler = buttonRegistry.get(interaction.customId);
-    return handler?.(interaction);
-  }
+    if (interaction.isButton()) {
+      const handler = buttonRegistry.get(interaction.customId);
+      return await handler?.(interaction);
+    }
 
-  if (interaction.isModalSubmit()) {
-    const handler = modalRegistry.get(interaction.customId);
-    return handler?.(interaction);
+    if (interaction.isModalSubmit()) {
+      const handler = modalRegistry.get(interaction.customId);
+      return await handler?.(interaction);
+    }
+  } catch (error) {
+    console.error("Interaction handler failed:", error);
+
+    if (interaction.isRepliable()) {
+      try {
+        if (interaction.replied || interaction.deferred) {
+          await interaction.followUp({
+            content: "An unexpected error occurred.",
+            flags: MessageFlags.Ephemeral,
+          });
+        } else {
+          await interaction.reply({
+            content: "An unexpected error occurred.",
+            flags: MessageFlags.Ephemeral,
+          });
+        }
+      } catch {
+        // Ignore failures to send the error message.
+      }
+    }
   }
 });
 

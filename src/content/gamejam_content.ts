@@ -1,9 +1,14 @@
+import { confirmPrompt } from "@/services/confirm_prompt.js";
 import { GamejamData } from "@/services/gamejam_data.js";
 import {
   addJammerRoleToUser,
   removeJammerRoleFromUser,
 } from "@/services/gamejam_roles.js";
-import { create_team_thread } from "@/services/gamejam_teams.js";
+import {
+  create_team_thread,
+  leave_team,
+  update_team_thread,
+} from "@/services/gamejam_teams.js";
 import { buttonRegistry, modalRegistry } from "@/services/registry.js";
 import {
   ActionRowBuilder,
@@ -60,8 +65,7 @@ modalRegistry.set("join_jam", async (interaction) => {
 });
 
 buttonRegistry.set("leave_jam", async (interaction) => {
-  const old_data = GamejamData.Participants.get(interaction.user);
-  if (!old_data) {
+  if (!GamejamData.Participants.exists(interaction.user)) {
     interaction.reply({
       content: "You are not currently a participant in the game jam.",
       flags: MessageFlags.Ephemeral,
@@ -69,16 +73,34 @@ buttonRegistry.set("leave_jam", async (interaction) => {
     return;
   }
 
-  GamejamData.Participants.remove(interaction.user);
-  removeJammerRoleFromUser(interaction, interaction.user);
+  confirmPrompt(
+    interaction,
+    "Are you sure you want to leave the game jam?",
+    async (confirmation) => {
+      const team = await GamejamData.Participants.get_team(interaction.user);
+      if (team) {
+        leave_team(interaction.user, team);
+      }
 
-  interaction.reply({
-    content: "Successfully left the game jam.",
-    flags: MessageFlags.Ephemeral,
-  });
+      GamejamData.Participants.remove(interaction.user);
+      removeJammerRoleFromUser(interaction, interaction.user);
+
+      confirmation.reply({
+        content: "Successfully left the game jam.",
+        flags: MessageFlags.Ephemeral,
+      });
+    },
+  );
 });
 
 buttonRegistry.set("create_jam_team", async (interaction) => {
+  if (!GamejamData.Participants.exists(interaction.user)) {
+    interaction.reply({
+      content: "You must be a participant in the game jam to create a team.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
   if (GamejamData.Participants.user_in_a_team(interaction.user)) {
     interaction.reply({
       content: "You are already in a team. You cannot create a new team.",
@@ -118,11 +140,18 @@ modalRegistry.set("create_jam_team", async (interaction) => {
     owner: interaction.user,
     team_name,
   });
-  GamejamData.Teams.create_team({
+  const team = GamejamData.Teams.create_team({
     owner: interaction.user,
     team_name,
     control_message: message,
     thread,
+  });
+
+  await update_team_thread(team);
+
+  interaction.reply({
+    content: `Successfully created team "${team_name}".`,
+    flags: MessageFlags.Ephemeral,
   });
 });
 

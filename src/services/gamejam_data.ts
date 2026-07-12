@@ -6,6 +6,7 @@ import {
   ChannelType,
   DiscordAPIError,
   Message,
+  Team,
   ThreadChannel,
   User,
   type Snowflake,
@@ -85,9 +86,18 @@ export const GamejamData = {
           FROM team_members
           WHERE user_id = ?`,
         )
-        .get(user.id) as { exists: number };
+        .get(user.id) as { count: number };
 
-      return Boolean(row.exists);
+      return row.count > 0;
+    },
+    async get_team(user: User): Promise<GamejamTeam | null> {
+      const row = db
+        .prepare(`SELECT team_id FROM team_members WHERE user_id = ? LIMIT 1`)
+        .get(user.id) as { team_id: string } | undefined;
+
+      if (!row) return null;
+
+      return await GamejamData.Teams.get_from_id(row.team_id);
     },
   },
 
@@ -96,7 +106,7 @@ export const GamejamData = {
   }>("jammer_blacklist"),
   ready: true,
   Teams: {
-    create_team(teamData: Omit<GamejamTeam, "id">): string {
+    create_team(teamData: Omit<GamejamTeam, "id">): GamejamTeam {
       const teamId = `${teamData.owner.id}-${Date.now()}` as Snowflake;
       db.prepare(
         `
@@ -118,9 +128,183 @@ export const GamejamData = {
         `,
       ).run(teamId, teamData.owner.id);
 
-      return teamId;
+      return {
+        id: teamId,
+        ...teamData,
+      };
+    },
+
+    delete(team: GamejamTeam) {
+      db.prepare(`DELETE FROM jam_teams WHERE id = ?`).run(team.id);
+    },
+
+    async get_team_from_thread(
+      thread: ThreadChannel,
+    ): Promise<GamejamTeam | null> {
+      const row = db
+        .prepare(`SELECT * FROM jam_teams WHERE control_channel = ?`)
+        .get(thread.id) as
+        | {
+            id: string;
+            owner_id: string;
+            team_name: string;
+            control_channel: string;
+            buttons_message: string;
+          }
+        | undefined;
+
+      if (!row) return null;
+
+      return {
+        id: row.id,
+        owner: await client.users.fetch(row.owner_id),
+        team_name: row.team_name,
+        thread: thread,
+        control_message: await thread.messages.fetch(row.buttons_message),
+      };
+    },
+
+    async get_from_id(id: string): Promise<GamejamTeam | null> {
+      const row = db.prepare(`SELECT * FROM jam_teams WHERE id = ?`).get(id) as
+        | {
+            id: string;
+            owner_id: string;
+            team_name: string;
+            control_channel: string;
+            buttons_message: string;
+          }
+        | undefined;
+
+      if (!row) return null;
+
+      const thread = await fetchChannel(
+        row.control_channel,
+        ChannelType.PublicThread,
+      );
+      if (!thread || !thread.isThread()) return null;
+
+      return {
+        id: row.id,
+        owner: await client.users.fetch(row.owner_id),
+        team_name: row.team_name,
+        thread: thread,
+        control_message: await thread.messages.fetch(row.buttons_message),
+      };
+    },
+
+    async add_to_team(user: User, team: GamejamTeam) {
+      db.prepare(
+        `INSERT INTO team_members (team_id, user_id) VALUES (?, ?)`,
+      ).run(team.id, user.id);
+    },
+
+    user_in_team(user: User, team: GamejamTeam): boolean {
+      const row = db
+        .prepare(`SELECT 1 FROM team_members WHERE user_id = ? AND team_id = ?`)
+        .get(user.id, team.id) as { exists: number } | undefined;
+
+      return Boolean(row);
+    },
+
+    leave_team(user: User, team: GamejamTeam) {
+      db.prepare(
+        `DELETE FROM team_members WHERE user_id = ? AND team_id = ?`,
+      ).run(user.id, team.id);
+    },
+
+    async get_members(team: GamejamTeam): Promise<User[]> {
+      const rows = db
+        .prepare(`SELECT user_id FROM team_members WHERE team_id = ?`)
+        .all(team.id) as { user_id: string }[];
+
+      return Promise.all(rows.map((row) => client.users.fetch(row.user_id)));
     },
   },
+
+  JoinRequests: {
+    add(user: User, team: GamejamTeam, confirmMessage: Message) {
+      db.prepare(
+        `INSERT INTO join_requests (request_message_id,user_id,team_id) VALUES (?, ?, ?)`,
+      ).run(confirmMessage.id, user.id, team.id);
+    },
+    exists(user: User, team: GamejamTeam): boolean {
+      const row = db
+        .prepare(
+          `SELECT 1 FROM join_requests WHERE user_id = ? AND team_id = ?`,
+        )
+        .get(user.id, team.id) as { exists: number } | undefined;
+
+      return Boolean(row);
+    },
+    async pop(message: Message) {
+      const row = db
+        .prepare(`SELECT * FROM join_requests WHERE request_message_id = ?`)
+        .get(message.id) as
+        | {
+            request_message_id: string;
+            user_id: string;
+            team_id: string;
+          }
+        | undefined;
+
+      if (!row) return null;
+
+      db.prepare(`DELETE FROM join_requests WHERE request_message_id = ?`).run(
+        message.id,
+      );
+
+      const team = await GamejamData.Teams.get_from_id(row.team_id);
+      if (!team) throw new Error("no team");
+      const user = await client.users.fetch(row.user_id);
+
+      return {
+        message,
+        user,
+        team,
+      };
+    },
+    async clear_user(user: User) {
+      db.prepare(`DELETE FROM join_requests WHERE user_id = ?`).run(user.id);
+    },
+  },
+  Submissions: {
+    set(data: Submission) {
+      db.prepare(
+        `INSERT INTO submissions (team_id, game_name, description, game_url)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT (team_id) DO 
+        UPDATE SET game_name=excluded.game_name, description=excluded.description, game_url=excluded.game_url`,
+      ).run(data.team.id, data.game_name, data.description, data.game_url);
+    },
+    get(team: GamejamTeam): Submission | null {
+      const row = db
+        .prepare(`SELECT * FROM submissions WHERE team_id = ?`)
+        .get(team.id) as
+        | {
+            team_id: string;
+            game_name: string;
+            description: string | null;
+            game_url: string;
+          }
+        | undefined;
+
+      if (!row) return null;
+
+      return {
+        team,
+        game_name: row.game_name,
+        description: row.description,
+        game_url: row.game_url,
+      };
+    },
+  },
+};
+
+export type Submission = {
+  team: GamejamTeam;
+  game_name: string;
+  description: string | null;
+  game_url: string;
 };
 
 export type GamejamTeam = {
@@ -209,6 +393,13 @@ function createUserTableAccessor<T extends Record<string, SQLOutputValue>>(
           rows.map((row) => client.users.fetch(row.id).catch(() => null)),
         )
       ).filter((user): user is User => user !== null);
+    },
+    exists(user: User): boolean {
+      const row = db
+        .prepare(`SELECT 1 FROM ${table} WHERE id = ?`)
+        .get(user.id) as { exists: number } | undefined;
+
+      return Boolean(row);
     },
   };
 }

@@ -20,9 +20,13 @@ client.on(Events.GuildMemberAdd, async (member) => {
 });
 
 client.on(Events.GuildRoleDelete, async (role) => {
-  if (role.id !== (await GamejamData.JammerRole.rawget())) return;
-  console.log("oh my god the role got deleted");
-  GamejamData.JammerRole.clear();
+  if (role.id === (await GamejamData.JammerRole.rawget())) {
+    console.log("oh my god the role got deleted");
+    GamejamData.JammerRole.clear();
+  } else if (role.id === (await GamejamData.OperatorRole.rawget())) {
+    console.log("oh my god the operator role got deleted");
+    GamejamData.OperatorRole.clear();
+  }
 });
 
 export async function addJammerRoleToUser(
@@ -51,7 +55,9 @@ export async function removeJammerRoleFromUser(
   member.roles.remove(role);
 }
 
-export async function createRole(interaction: Interaction): Promise<Role> {
+export async function createJammerRole(
+  interaction: Interaction,
+): Promise<Role> {
   const existingRole = await GamejamData.JammerRole.get();
 
   if (existingRole) {
@@ -69,6 +75,30 @@ export async function createRole(interaction: Interaction): Promise<Role> {
     reason: "Jammer role for Game Jam",
   });
   GamejamData.JammerRole.set(role);
+
+  return role;
+}
+
+export async function createOperatorRole(
+  interaction: Interaction,
+): Promise<Role> {
+  const existingRole = await GamejamData.OperatorRole.get();
+
+  if (existingRole) {
+    console.log("Operator role alreaedy exists");
+    return existingRole;
+  }
+
+  if (!interaction.guild) throw new Error("Interaction is not from a guild.");
+
+  const role = await interaction.guild.roles.create({
+    name: "Game Jam Operator",
+    colors: {
+      primaryColor: Colors.Red,
+    },
+    reason: "Operator role for Game Jam",
+  });
+  GamejamData.OperatorRole.set(role);
 
   return role;
 }

@@ -3,7 +3,10 @@ import {
   create_panel_channel,
   update_panel_message,
 } from "@/services/gamejam_panel.js";
-import { createRole } from "@/services/gamejam_roles.js";
+import {
+  createJammerRole,
+  createOperatorRole,
+} from "@/services/gamejam_roles.js";
 import { create_teams_channel } from "@/services/gamejam_teams.js";
 import type { Command } from "@/types/command.js";
 import {
@@ -27,8 +30,10 @@ export default {
     }
     GamejamData.Guild.set(interaction.guild);
     console.log("Set guild to", interaction.guild.id);
-    const role = await createRole(interaction);
-    console.log("Set role to", role.id);
+    const jammer_role = await createJammerRole(interaction);
+    console.log("Set jammer role to", jammer_role.id);
+    const operator_role = await createOperatorRole(interaction);
+    console.log("Set operator role to", operator_role.id);
     const channel = await create_panel_channel();
     console.log("Set channel to", channel.id);
     const main_panel = await update_panel_message();

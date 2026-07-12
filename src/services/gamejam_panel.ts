@@ -1,4 +1,10 @@
-import { ChannelType, Events, Message, TextChannel } from "discord.js";
+import {
+  ChannelType,
+  Events,
+  Message,
+  TextChannel,
+  type OverwriteResolvable,
+} from "discord.js";
 import { GamejamData } from "./gamejam_data.js";
 import { GamejamMenu } from "@/content/gamejam_content.js";
 import { client } from "./client.js";
@@ -14,9 +20,16 @@ export async function create_panel_channel(): Promise<TextChannel> {
   const guild = await GamejamData.Guild.get();
   if (!guild) throw new Error("no guild");
 
-  const existingChannel = await GamejamData.Menu.Channel.get();
+  const perms = [
+    {
+      id: guild.roles.everyone.id,
+      deny: ["SendMessages"],
+    },
+  ] as OverwriteResolvable[];
+  const existingChannel = (await GamejamData.Menu.Channel.get()) as TextChannel;
   if (existingChannel) {
     console.log("Menu channel already exists");
+    existingChannel.permissionOverwrites.set(perms);
     return existingChannel as TextChannel;
   }
 
@@ -24,12 +37,7 @@ export async function create_panel_channel(): Promise<TextChannel> {
     name: "gamejam-panel",
     type: ChannelType.GuildText,
     topic: "Gamejam menu",
-    permissionOverwrites: [
-      {
-        id: guild.roles.everyone.id,
-        deny: ["SendMessages"],
-      },
-    ],
+    permissionOverwrites: perms,
   });
   GamejamData.Menu.Channel.set(channel);
 
