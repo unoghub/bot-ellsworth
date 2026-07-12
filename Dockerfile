@@ -20,6 +20,8 @@ ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm ci --only=production
 
+COPY sql ./sql
+
 COPY --from=builder /app/dist ./dist
 
 CMD ["npm", "start"]
