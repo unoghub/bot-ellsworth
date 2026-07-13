@@ -1,3 +1,10 @@
+version: '3.8'
+
+# Portainer'a build sırasında BuildKit kullanmamasını söyler
+x-build:
+  DOCKER_BUILDKIT: 0
+  COMPOSE_DOCKER_CLI_BUILD: 0
+
 services:
   bot:
     build: .
