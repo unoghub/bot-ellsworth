@@ -1,12 +1,11 @@
 services:
   bot:
-    build:
-      context: .
-      network: default # <--- İmaj basılırken host ağını değil, standart docker ağını kullan dedik
+    build: .
     container_name: unog-bot
     restart: unless-stopped
-    network_mode: host # <--- Konteyner çalışırken yine host ağında çalışmaya devam edecek
+    network_mode: host
     env_file:
       - .env
     volumes:
+
       - ./data:/app/data
