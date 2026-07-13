@@ -4,8 +4,6 @@ build
 
 #Dotfiles
 .git
-.env
-.env*
 .prettierrc
 .vscode
 
