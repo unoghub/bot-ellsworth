@@ -1,7 +1,7 @@
 import { client } from "@/services/client.js";
 import { confirmPrompt } from "@/services/confirm_prompt.js";
 import { GamejamData, type GamejamTeam } from "@/services/gamejam_data.js";
-import { leave_team, update_team_thread } from "@/services/gamejam_teams.js";
+import { leave_team, update_team_channels } from "@/services/gamejam_teams.js";
 import { buttonRegistry, modalRegistry } from "@/services/registry.js";
 import {
   ActionRowBuilder,
@@ -96,7 +96,7 @@ buttonRegistry.set("accept_join", async (interaction) => {
   GamejamData.JoinRequests.clear_user(request.user);
   GamejamData.Teams.add_to_team(request.user, request.team);
 
-  update_team_thread(request.team);
+  update_team_channels(request.team);
   request.user.send(
     `Your request to join ${request.team?.team_name} has been accepted.`,
   );
@@ -204,7 +204,7 @@ modalRegistry.set("submit_game", async (interaction) => {
     game_url,
   });
 
-  update_team_thread(team);
+  update_team_channels(team);
   interaction.reply({
     content: `Your game has been submitted!`,
     flags: MessageFlags.Ephemeral,

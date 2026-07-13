@@ -21,7 +21,6 @@ CREATE TABLE IF NOT EXISTS jam_teams (
     buttons_message TEXT NOT NULL UNIQUE,
 
     voice_channel TEXT NOT NULL UNIQUE,
-    communications_channel TEXT NOT NULL UNIQUE,
 
     FOREIGN KEY (owner_id)
     REFERENCES participants(id)

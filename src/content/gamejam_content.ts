@@ -6,8 +6,9 @@ import {
 } from "@/services/gamejam_roles.js";
 import {
   create_team_thread,
+  create_voice_communication,
   leave_team,
-  update_team_thread,
+  update_team_channels,
 } from "@/services/gamejam_teams.js";
 import { buttonRegistry, modalRegistry } from "@/services/registry.js";
 import {
@@ -140,14 +141,17 @@ modalRegistry.set("create_jam_team", async (interaction) => {
     owner: interaction.user,
     team_name,
   });
+
+  const voice_channel = await create_voice_communication(team_name);
   const team = GamejamData.Teams.create_team({
     owner: interaction.user,
     team_name,
     control_message: message,
     thread,
+    voice_channel,
   });
 
-  await update_team_thread(team);
+  await update_team_channels(team);
 
   interaction.reply({
     content: `Successfully created team "${team_name}".`,

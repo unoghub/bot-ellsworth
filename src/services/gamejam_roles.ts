@@ -8,6 +8,7 @@ import {
 } from "discord.js";
 import { GamejamData } from "./gamejam_data.js";
 import { client } from "./client.js";
+import { update_team_channels } from "./gamejam_teams.js";
 
 client.on(Events.GuildMemberAdd, async (member) => {
   const isParticipant = GamejamData.Participants.get(member.user);
@@ -16,6 +17,11 @@ client.on(Events.GuildMemberAdd, async (member) => {
     const role = await GamejamData.JammerRole.get();
     if (!role) return;
     await member.roles.add(role).catch(() => null);
+
+    const team = await GamejamData.Participants.get_team(member.user);
+    if (team) {
+      update_team_channels(team);
+    }
   }
 });
 

@@ -7,13 +7,17 @@ import {
   DiscordAPIError,
   Message,
   Team,
+  TextChannel,
   ThreadChannel,
   User,
+  VoiceChannel,
   type Snowflake,
 } from "discord.js";
 import { readFileSync } from "node:fs";
+import { error } from "node:console";
 
 const db = new DatabaseSync("data/gamejam.db");
+db.exec("PRAGMA journal_mode = WAL");
 db.exec("PRAGMA foreign_keys = ON;");
 const schema = readFileSync("sql/init.sql", "utf8");
 db.exec(schema);
@@ -74,6 +78,47 @@ export const GamejamData = {
       fetchChannel(id, ChannelType.GuildForum),
     ),
   },
+  CommunicationsCategory: createDiscordAccessor(
+    "jam_communications_category",
+    async (id) => {
+      const guildId = getConfig("guild_id");
+      if (!guildId) throw new Error("no guild");
+
+      const guild = await client.guilds.fetch(guildId);
+
+      if (!guild) throw new Error("no guild");
+
+      const channel = await guild.channels.fetch(id);
+
+      if (!channel) return null;
+
+      if (channel.type !== ChannelType.GuildCategory) {
+        console.log("invalid, return null");
+        return null;
+      }
+
+      return channel;
+    },
+  ),
+  ArchiveCategory: createDiscordAccessor("jam_archive_category", async (id) => {
+    const guildId = getConfig("guild_id");
+    if (!guildId) throw new Error("no guild");
+
+    const guild = await client.guilds.fetch(guildId);
+
+    if (!guild) throw new Error("no guild");
+
+    const channel = await guild.channels.fetch(id);
+
+    if (!channel) return null;
+
+    if (channel.type !== ChannelType.GuildCategory) {
+      console.log("invalid, return null");
+      return null;
+    }
+
+    return channel;
+  }),
   Participants: {
     ...createUserTableAccessor<{
       legal_name: string;
@@ -105,13 +150,14 @@ export const GamejamData = {
     reason: string | null;
   }>("jammer_blacklist"),
   ready: true,
+
   Teams: {
     create_team(teamData: Omit<GamejamTeam, "id">): GamejamTeam {
       const teamId = `${teamData.owner.id}-${Date.now()}` as Snowflake;
       db.prepare(
         `
-        INSERT INTO jam_teams (id, owner_id, team_name, control_channel, buttons_message)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO jam_teams (id, owner_id, team_name, control_channel, buttons_message, voice_channel)
+        VALUES (?, ?, ?, ?, ?, ?)
       `,
       ).run(
         teamId,
@@ -119,6 +165,7 @@ export const GamejamData = {
         teamData.team_name,
         teamData.thread.id,
         teamData.control_message.id,
+        teamData.voice_channel.id,
       );
 
       db.prepare(
@@ -150,10 +197,17 @@ export const GamejamData = {
             team_name: string;
             control_channel: string;
             buttons_message: string;
+            voice_channel: string;
           }
         | undefined;
 
       if (!row) return null;
+
+      const voice_channel = (await fetchChannel(
+        row.voice_channel,
+        ChannelType.GuildVoice,
+      )) as VoiceChannel | null;
+      if (!voice_channel || !voice_channel.isVoiceBased()) return null;
 
       return {
         id: row.id,
@@ -161,6 +215,7 @@ export const GamejamData = {
         team_name: row.team_name,
         thread: thread,
         control_message: await thread.messages.fetch(row.buttons_message),
+        voice_channel: voice_channel,
       };
     },
 
@@ -172,6 +227,7 @@ export const GamejamData = {
             team_name: string;
             control_channel: string;
             buttons_message: string;
+            voice_channel: string;
           }
         | undefined;
 
@@ -183,12 +239,19 @@ export const GamejamData = {
       );
       if (!thread || !thread.isThread()) return null;
 
+      const voice_channel = (await fetchChannel(
+        row.voice_channel,
+        ChannelType.GuildVoice,
+      )) as VoiceChannel | null;
+      if (!voice_channel || !voice_channel.isVoiceBased()) return null;
+
       return {
         id: row.id,
         owner: await client.users.fetch(row.owner_id),
         team_name: row.team_name,
         thread: thread,
         control_message: await thread.messages.fetch(row.buttons_message),
+        voice_channel: voice_channel,
       };
     },
 
@@ -313,6 +376,7 @@ export type GamejamTeam = {
   team_name: string;
   thread: ThreadChannel;
   control_message: Message;
+  voice_channel: VoiceChannel;
 };
 
 type DiscordAccessor<T> = {
@@ -407,9 +471,7 @@ function createUserTableAccessor<T extends Record<string, SQLOutputValue>>(
 // helper function to fetch channel with type checking
 async function fetchChannel(id: string, type: ChannelType) {
   const channel = await client.channels.fetch(id);
-  if (!channel) return null;
-  if (channel.type !== type) {
-    console.error(`Channel is not of type ${type}, how did it get here?`);
+  if (!channel || channel.type !== type) {
     return null;
   }
   return channel;
