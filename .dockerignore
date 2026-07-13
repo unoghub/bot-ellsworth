@@ -17,7 +17,5 @@ yarn-error.log
 *.log
 
 #Docker files
-Dockerfile
-docker-compose.yml
 
 gamejam_db.json
