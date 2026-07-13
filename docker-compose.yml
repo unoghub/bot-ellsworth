@@ -4,8 +4,10 @@ services:
     container_name: unog-bot
     restart: unless-stopped
     network_mode: host
-    env_file:
-      - stack.env
+    environment:
+      - TOKEN=${TOKEN}
+      - CLIENT_ID=${CLIENT_ID}
+      - GUILD_ID=${GUILD_ID}
     volumes:
 
       - ./data:/app/data
