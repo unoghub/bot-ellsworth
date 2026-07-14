@@ -39,7 +39,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       try {
         if (interaction.replied || interaction.deferred) {
           await interaction.followUp({
-            content: "An unexpected error occurred.",
+            content: `An unexpected error occurred.`,
             flags: MessageFlags.Ephemeral,
           });
         } else {

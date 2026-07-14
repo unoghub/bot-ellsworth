@@ -46,11 +46,11 @@ modalRegistry.set("join_jam", async (interaction) => {
   const legal_name = interaction.fields.getTextInputValue("nameInput");
   const old_data = GamejamData.Participants.get(interaction.user);
 
+  await addJammerRoleToUser(interaction.user);
+
   GamejamData.Participants.set(interaction.user, {
     legal_name: legal_name,
   });
-
-  addJammerRoleToUser(interaction, interaction.user);
 
   if (old_data) {
     interaction.reply({
@@ -66,7 +66,7 @@ modalRegistry.set("join_jam", async (interaction) => {
 });
 
 buttonRegistry.set("leave_jam", async (interaction) => {
-  if (!GamejamData.Participants.exists(interaction.user)) {
+  if (!GamejamData.Participants.get(interaction.user)) {
     interaction.reply({
       content: "You are not currently a participant in the game jam.",
       flags: MessageFlags.Ephemeral,
@@ -74,7 +74,7 @@ buttonRegistry.set("leave_jam", async (interaction) => {
     return;
   }
 
-  confirmPrompt(
+  await confirmPrompt(
     interaction,
     "Are you sure you want to leave the game jam?",
     async (confirmation) => {
@@ -83,8 +83,8 @@ buttonRegistry.set("leave_jam", async (interaction) => {
         leave_team(interaction.user, team);
       }
 
+      await removeJammerRoleFromUser(interaction.user);
       GamejamData.Participants.remove(interaction.user);
-      removeJammerRoleFromUser(interaction, interaction.user);
 
       confirmation.reply({
         content: "Successfully left the game jam.",
@@ -95,14 +95,14 @@ buttonRegistry.set("leave_jam", async (interaction) => {
 });
 
 buttonRegistry.set("create_jam_team", async (interaction) => {
-  if (!GamejamData.Participants.exists(interaction.user)) {
+  if (!GamejamData.Participants.get(interaction.user)) {
     interaction.reply({
       content: "You must be a participant in the game jam to create a team.",
       flags: MessageFlags.Ephemeral,
     });
     return;
   }
-  if (GamejamData.Participants.user_in_a_team(interaction.user)) {
+  if (GamejamData.Participants.in_a_team(interaction.user)) {
     interaction.reply({
       content: "You are already in a team. You cannot create a new team.",
       flags: MessageFlags.Ephemeral,
@@ -129,7 +129,7 @@ buttonRegistry.set("create_jam_team", async (interaction) => {
 
 modalRegistry.set("create_jam_team", async (interaction) => {
   const team_name = interaction.fields.getTextInputValue("team_name");
-  if (GamejamData.Participants.user_in_a_team(interaction.user)) {
+  if (GamejamData.Participants.in_a_team(interaction.user)) {
     interaction.reply({
       content: "You are already in a team. You cannot create a new team.",
       flags: MessageFlags.Ephemeral,
@@ -138,7 +138,6 @@ modalRegistry.set("create_jam_team", async (interaction) => {
   }
 
   const [thread, message] = await create_team_thread({
-    owner: interaction.user,
     team_name,
   });
 

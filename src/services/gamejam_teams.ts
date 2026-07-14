@@ -4,19 +4,16 @@ import {
   Events,
   Message,
   OverwriteType,
-  OverwrittenMimeTypes,
-  TextChannel,
+  ThreadChannel,
   User,
   VoiceChannel,
   type ForumChannel,
   type ForumThreadChannel,
   type OverwriteResolvable,
-  type PermissionOverwriteResolvable,
 } from "discord.js";
-import { GamejamData, type GamejamTeam } from "./gamejam_data.js";
+import { fetchChannel, GamejamData, type GamejamTeam } from "./gamejam_data.js";
 import { GenerateTeamView } from "@/content/gamejam_team_controls.js";
 import { client } from "./client.js";
-import { create_archive_category } from "./gamejam_operator.js";
 
 client.on(Events.ChannelDelete, async (channel) => {
   if (channel.id !== (await GamejamData.TeamsForum.Channel.rawget())) return;
@@ -74,7 +71,6 @@ export async function create_teams_channel(): Promise<ForumChannel> {
 }
 
 export async function create_team_thread(teamData: {
-  owner: User;
   team_name: string;
 }): Promise<[ForumThreadChannel, Message]> {
   const channel = (await GamejamData.TeamsForum.Channel.get()) as ForumChannel;
@@ -86,6 +82,14 @@ export async function create_team_thread(teamData: {
   const message = await forumThreadChannel.fetchStarterMessage();
   if (!message) throw new Error("What the hey?");
   return [forumThreadChannel, message];
+}
+
+export async function create_control_message(
+  thread: ThreadChannel,
+): Promise<Message<boolean>> {
+  return thread.send({
+    content: "placeholder",
+  });
 }
 
 export async function update_team_channels(team: GamejamTeam) {
@@ -218,3 +222,27 @@ export async function create_voice_communication(
 
   return channel;
 }
+
+client.on(Events.ThreadDelete, async (thread) => {
+  if (!thread.parent) return;
+  if (thread.parent.id !== (await GamejamData.TeamsForum.Channel.get())?.id)
+    return;
+  const team = await GamejamData.Teams.get_team_from_thread(thread, {
+    raw: true,
+  });
+  if (!team) return;
+
+  console.log("team channel deleted, deleting team.");
+
+  const archiveChannel = await GamejamData.ArchiveCategory.get();
+
+  fetchChannel(team.voice_channel, ChannelType.GuildVoice).then((channel) => {
+    if (!channel) return;
+    if (archiveChannel) {
+      (channel as VoiceChannel).setParent(archiveChannel);
+    } else {
+      channel.delete();
+    }
+  });
+  GamejamData.Teams.delete_with_id(team.id);
+});

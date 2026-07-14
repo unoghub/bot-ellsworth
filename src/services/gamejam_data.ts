@@ -15,6 +15,12 @@ import {
 } from "discord.js";
 import { readFileSync } from "node:fs";
 import { error } from "node:console";
+import {
+  create_control_message,
+  create_team_thread,
+  create_voice_communication,
+  update_team_channels,
+} from "./gamejam_teams.js";
 
 const db = new DatabaseSync("data/gamejam.db");
 db.exec("PRAGMA journal_mode = WAL");
@@ -124,7 +130,7 @@ export const GamejamData = {
       legal_name: string;
     }>("participants"),
 
-    user_in_a_team(user: User): boolean {
+    in_a_team(user: User): boolean {
       const row = db
         .prepare(
           `SELECT COUNT(*) AS count
@@ -185,74 +191,116 @@ export const GamejamData = {
       db.prepare(`DELETE FROM jam_teams WHERE id = ?`).run(team.id);
     },
 
-    async get_team_from_thread(
+    delete_with_id(id: string) {
+      db.prepare(`DELETE FROM jam_teams WHERE id = ?`).run(id);
+    },
+
+    async get_team_from_thread<T extends boolean = false>(
       thread: ThreadChannel,
-    ): Promise<GamejamTeam | null> {
+      options?: { raw: T },
+    ): Promise<T extends true ? RawGamejamTeam | null : GamejamTeam | null> {
       const row = db
         .prepare(`SELECT * FROM jam_teams WHERE control_channel = ?`)
-        .get(thread.id) as
-        | {
-            id: string;
-            owner_id: string;
-            team_name: string;
-            control_channel: string;
-            buttons_message: string;
-            voice_channel: string;
-          }
-        | undefined;
+        .get(thread.id) as RawGamejamTeam | undefined;
 
       if (!row) return null;
 
-      const voice_channel = (await fetchChannel(
+      if (options?.raw) {
+        return row as T extends true
+          ? RawGamejamTeam | null
+          : GamejamTeam | null;
+      }
+
+      let control_message = await fetchMessage(thread.id, row.buttons_message);
+      if (!control_message) {
+        control_message = await create_control_message(thread);
+        db.prepare(`UPDATE jam_teams SET buttons_message = ? WHERE id = ?`).run(
+          control_message.id,
+          row.id,
+        );
+      }
+
+      let voice_channel = (await fetchChannel(
         row.voice_channel,
         ChannelType.GuildVoice,
       )) as VoiceChannel | null;
-      if (!voice_channel || !voice_channel.isVoiceBased()) return null;
+      if (!voice_channel) {
+        voice_channel = await create_voice_communication(row.team_name);
+        db.prepare(`UPDATE jam_teams SET voice_channel = ? WHERE id = ?`).run(
+          voice_channel.id,
+          row.id,
+        );
+      }
 
-      return {
+      const out: GamejamTeam = {
         id: row.id,
         owner: await client.users.fetch(row.owner_id),
         team_name: row.team_name,
         thread: thread,
-        control_message: await thread.messages.fetch(row.buttons_message),
+        control_message: control_message,
         voice_channel: voice_channel,
       };
+
+      update_team_channels(out);
+
+      return out as T extends true ? RawGamejamTeam | null : GamejamTeam | null;
     },
 
     async get_from_id(id: string): Promise<GamejamTeam | null> {
       const row = db.prepare(`SELECT * FROM jam_teams WHERE id = ?`).get(id) as
-        | {
-            id: string;
-            owner_id: string;
-            team_name: string;
-            control_channel: string;
-            buttons_message: string;
-            voice_channel: string;
-          }
-        | undefined;
+        RawGamejamTeam | undefined;
 
       if (!row) return null;
 
-      const thread = await fetchChannel(
+      let thread_message = await fetchChannel(
         row.control_channel,
         ChannelType.PublicThread,
       );
-      if (!thread || !thread.isThread()) return null;
+      let control_message;
+      if (!thread_message?.isThread()) {
+        [thread_message, control_message] = await create_team_thread({
+          team_name: row.team_name,
+        });
+        db.prepare(
+          `UPDATE jam_teams SET control_channel = ?, buttons_message = ? WHERE id = ?`,
+        ).run(thread_message.id, control_message.id, row.id);
+      } else {
+        control_message = await fetchMessage(
+          thread_message.id,
+          row.buttons_message,
+        );
+        if (!control_message) {
+          control_message = await create_control_message(thread_message);
+          db.prepare(
+            `UPDATE jam_teams SET buttons_message = ? WHERE id = ?`,
+          ).run(control_message.id, row.id);
+        }
+      }
 
-      const voice_channel = (await fetchChannel(
+      let voice_channel = (await fetchChannel(
         row.voice_channel,
         ChannelType.GuildVoice,
       )) as VoiceChannel | null;
-      if (!voice_channel || !voice_channel.isVoiceBased()) return null;
+      if (!voice_channel) {
+        voice_channel = await create_voice_communication(row.team_name);
+        db.prepare(`UPDATE jam_teams SET voice_channel = ? WHERE id = ?`).run(
+          voice_channel.id,
+          row.id,
+        );
+      }
 
-      return {
+      const out: GamejamTeam = {
         id: row.id,
         owner: await client.users.fetch(row.owner_id),
         team_name: row.team_name,
-        thread: thread,
-        control_message: await thread.messages.fetch(row.buttons_message),
-        voice_channel: voice_channel,
+        thread: thread_message,
+        control_message,
+        voice_channel,
       };
+
+      update_team_channels(out);
+
+      return out;
     },
 
     async add_to_team(user: User, team: GamejamTeam) {
@@ -312,14 +360,13 @@ export const GamejamData = {
 
       if (!row) return null;
 
-      db.prepare(`DELETE FROM join_requests WHERE request_message_id = ?`).run(
-        message.id,
-      );
-
       const team = await GamejamData.Teams.get_from_id(row.team_id);
       if (!team) throw new Error("no team");
       const user = await client.users.fetch(row.user_id);
 
+      db.prepare(`DELETE FROM join_requests WHERE request_message_id = ?`).run(
+        message.id,
+      );
       return {
         message,
         user,
@@ -377,6 +424,15 @@ export type GamejamTeam = {
   thread: ThreadChannel;
   control_message: Message;
   voice_channel: VoiceChannel;
+};
+
+type RawGamejamTeam = {
+  id: string;
+  owner_id: string;
+  team_name: string;
+  control_channel: string;
+  buttons_message: string;
+  voice_channel: string;
 };
 
 type DiscordAccessor<T> = {
@@ -458,6 +514,7 @@ function createUserTableAccessor<T extends Record<string, SQLOutputValue>>(
         )
       ).filter((user): user is User => user !== null);
     },
+
     exists(user: User): boolean {
       const row = db
         .prepare(`SELECT 1 FROM ${table} WHERE id = ?`)
@@ -469,8 +526,13 @@ function createUserTableAccessor<T extends Record<string, SQLOutputValue>>(
 }
 
 // helper function to fetch channel with type checking
-async function fetchChannel(id: string, type: ChannelType) {
-  const channel = await client.channels.fetch(id);
+export async function fetchChannel(id: string, type: ChannelType) {
+  const channel = await client.channels.fetch(id).catch((err: unknown) => {
+    if (err instanceof DiscordAPIError && err.code === 10003) {
+      return null;
+    }
+    throw err;
+  });
   if (!channel || channel.type !== type) {
     return null;
   }

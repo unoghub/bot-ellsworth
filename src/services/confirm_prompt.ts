@@ -2,6 +2,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  DiscordAPIError,
   MessageFlags,
   type ButtonInteraction,
   type Interaction,
@@ -10,7 +11,7 @@ import {
 export async function confirmPrompt(
   interaction: Interaction,
   message: string,
-  func: (interaction: ButtonInteraction) => void,
+  func: (interaction: ButtonInteraction) => Promise<void>,
 ) {
   if (!interaction.isRepliable()) throw new Error("no repliable");
   await interaction.reply({
@@ -41,7 +42,7 @@ export async function confirmPrompt(
     if (!confirmation.isButton()) throw new Error("no button");
 
     if (confirmation.customId === "confirm") {
-      func(confirmation);
+      await func(confirmation);
     } else {
       await confirmation.update({
         content: "Cancelled.",
@@ -49,9 +50,15 @@ export async function confirmPrompt(
       });
     }
   } catch {
-    await interaction.editReply({
-      content: "Confirmation timed out.",
-      components: [],
-    });
+    try {
+      await interaction.editReply({
+        content: "Confirmation timed out.",
+        components: [],
+      });
+    } catch (e) {
+      if (!(e instanceof DiscordAPIError && e.code === 10008)) {
+        throw e;
+      }
+    }
   }
 }

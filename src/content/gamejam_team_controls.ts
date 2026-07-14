@@ -27,7 +27,7 @@ buttonRegistry.set("join_team", async (interaction) => {
     });
     return;
   }
-  if (GamejamData.Participants.user_in_a_team(interaction.user)) {
+  if (GamejamData.Participants.in_a_team(interaction.user)) {
     interaction.reply({
       content: "You are already in a team. You cannot join another team.",
       flags: MessageFlags.Ephemeral,
@@ -82,9 +82,6 @@ function CreateJoinRequestMessage(
 
 buttonRegistry.set("accept_join", async (interaction) => {
   const request = await GamejamData.JoinRequests.pop(interaction.message);
-  (
-    (await client.channels.fetch(interaction.channelId)) as TextChannel
-  ).messages.delete(interaction.message.id);
   if (!request) {
     interaction.reply({
       content: "This join request has already been handled.",
@@ -95,6 +92,14 @@ buttonRegistry.set("accept_join", async (interaction) => {
 
   GamejamData.JoinRequests.clear_user(request.user);
   GamejamData.Teams.add_to_team(request.user, request.team);
+
+  try {
+    (
+      (await client.channels.fetch(interaction.channelId)) as TextChannel
+    ).messages.delete(interaction.message.id);
+  } catch {
+    console.log("deletion failed");
+  }
 
   update_team_channels(request.team);
   request.user.send(
@@ -108,9 +113,6 @@ buttonRegistry.set("accept_join", async (interaction) => {
 
 buttonRegistry.set("reject_join", async (interaction) => {
   const request = await GamejamData.JoinRequests.pop(interaction.message);
-  (
-    (await client.channels.fetch(interaction.channelId)) as TextChannel
-  ).messages.delete(interaction.message.id);
   if (!request) {
     interaction.reply({
       content: "This join request has already been handled.",
@@ -119,6 +121,13 @@ buttonRegistry.set("reject_join", async (interaction) => {
     return;
   }
 
+  try {
+    (
+      (await client.channels.fetch(interaction.channelId)) as TextChannel
+    ).messages.delete(interaction.message.id);
+  } catch {
+    console.log("deletion failed");
+  }
   request.user.send({
     content: `Your request to join ${request.team?.team_name} has been rejected.`,
   });

@@ -35,27 +35,23 @@ client.on(Events.GuildRoleDelete, async (role) => {
   }
 });
 
-export async function addJammerRoleToUser(
-  interaction: RepliableInteraction,
-  user: User,
-): Promise<void> {
-  if (!interaction.guild) throw new Error("No guild");
+export async function addJammerRoleToUser(user: User): Promise<void> {
+  const guild = await GamejamData.Guild.get();
+  if (!guild) throw new Error("No guild");
   const role = await GamejamData.JammerRole.get();
   if (!role) throw new Error("no role");
-  const member = await interaction.guild.members.fetch(user).catch(() => null);
+  const member = await guild.members.fetch(user).catch(() => null);
   if (!member) throw new Error("user not a member");
 
   member.roles.add(role);
 }
 
-export async function removeJammerRoleFromUser(
-  interaction: RepliableInteraction,
-  user: User,
-): Promise<void> {
-  if (!interaction.guild) throw new Error("No guild");
+export async function removeJammerRoleFromUser(user: User): Promise<void> {
+  const guild = await GamejamData.Guild.get();
+  if (!guild) throw new Error("No guild");
   const role = await GamejamData.JammerRole.get();
   if (!role) throw new Error("no role");
-  const member = await interaction.guild.members.fetch(user).catch(() => null);
+  const member = await guild.members.fetch(user).catch(() => null);
   if (!member) throw new Error("user not a member");
 
   member.roles.remove(role);
