@@ -4,6 +4,7 @@ services:
     container_name: unog-bot
     restart: unless-stopped
     network_mode: host
+    command: npm run deploy
     environment:
       - TOKEN=${TOKEN}
       - CLIENT_ID=${CLIENT_ID}
