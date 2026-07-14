@@ -7,6 +7,7 @@ build
 .prettierrc
 .vscode
 
+
 #Documentation Files
 README.md
 CONTRIBUTING.md

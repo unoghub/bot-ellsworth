@@ -1,5 +1,5 @@
 config.ts
-
+.env 
 node_modules/
 dist/
 
