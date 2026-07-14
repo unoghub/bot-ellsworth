@@ -6,15 +6,12 @@ import {
   ChannelType,
   DiscordAPIError,
   Message,
-  Team,
-  TextChannel,
   ThreadChannel,
   User,
   VoiceChannel,
   type Snowflake,
 } from "discord.js";
 import { readFileSync } from "node:fs";
-import { error } from "node:console";
 import {
   create_control_message,
   create_team_thread,
@@ -71,7 +68,7 @@ export const GamejamData = {
   }),
   Menu: {
     Channel: createDiscordAccessor("commands_channel", (id) =>
-      fetchChannel(id, ChannelType.GuildText),
+      fetchChannelWithType(id, ChannelType.GuildText),
     ),
     Message: createDiscordAccessor("jam_menu_message", (id) => {
       const channelId = getConfig("commands_channel");
@@ -81,7 +78,7 @@ export const GamejamData = {
   },
   TeamsForum: {
     Channel: createDiscordAccessor("teams_channel", (id) =>
-      fetchChannel(id, ChannelType.GuildForum),
+      fetchChannelWithType(id, ChannelType.GuildForum),
     ),
   },
   CommunicationsCategory: createDiscordAccessor(
@@ -158,12 +155,23 @@ export const GamejamData = {
   ready: true,
 
   Teams: {
-    create_team(teamData: Omit<GamejamTeam, "id">): GamejamTeam {
-      const teamId = `${teamData.owner.id}-${Date.now()}` as Snowflake;
+    set_team(
+      teamData: Omit<GamejamTeam, "id"> & { id?: Snowflake },
+    ): GamejamTeam {
+      var teamId = teamData.id;
+      if (teamId === undefined) {
+        teamId = `${teamData.owner.id}-${Date.now()}` as Snowflake;
+      }
       db.prepare(
         `
         INSERT INTO jam_teams (id, owner_id, team_name, control_channel, buttons_message, voice_channel)
         VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET 
+        owner_id=excluded.owner_id, 
+        team_name=excluded.team_name, 
+        control_channel=excluded.control_channel, 
+        buttons_message=excluded.buttons_message, 
+        voice_channel=excluded.voice_channel
       `,
       ).run(
         teamId,
@@ -178,12 +186,14 @@ export const GamejamData = {
         `
         INSERT INTO team_members (team_id, user_id)
         VALUES (?, ?)
+        ON CONFLICT(team_id, user_id) DO NOTHING
         `,
       ).run(teamId, teamData.owner.id);
 
+      const { id, ...rest } = teamData;
       return {
         id: teamId,
-        ...teamData,
+        ...rest,
       };
     },
 
@@ -220,7 +230,7 @@ export const GamejamData = {
         );
       }
 
-      let voice_channel = (await fetchChannel(
+      let voice_channel = (await fetchChannelWithType(
         row.voice_channel,
         ChannelType.GuildVoice,
       )) as VoiceChannel | null;
@@ -252,7 +262,7 @@ export const GamejamData = {
 
       if (!row) return null;
 
-      let thread_message = await fetchChannel(
+      let thread_message = await fetchChannelWithType(
         row.control_channel,
         ChannelType.PublicThread,
       );
@@ -277,7 +287,7 @@ export const GamejamData = {
         }
       }
 
-      let voice_channel = (await fetchChannel(
+      let voice_channel = (await fetchChannelWithType(
         row.voice_channel,
         ChannelType.GuildVoice,
       )) as VoiceChannel | null;
@@ -329,6 +339,13 @@ export const GamejamData = {
         .all(team.id) as { user_id: string }[];
 
       return Promise.all(rows.map((row) => client.users.fetch(row.user_id)));
+    },
+
+    async raw_get_all(): Promise<RawGamejamTeam[]> {
+      const rows = db
+        .prepare(`SELECT * FROM jam_teams`)
+        .all() as RawGamejamTeam[];
+      return rows;
     },
   },
 
@@ -426,7 +443,7 @@ export type GamejamTeam = {
   voice_channel: VoiceChannel;
 };
 
-type RawGamejamTeam = {
+export type RawGamejamTeam = {
   id: string;
   owner_id: string;
   team_name: string;
@@ -526,7 +543,7 @@ function createUserTableAccessor<T extends Record<string, SQLOutputValue>>(
 }
 
 // helper function to fetch channel with type checking
-export async function fetchChannel(id: string, type: ChannelType) {
+export async function fetchChannelWithType(id: string, type: ChannelType) {
   const channel = await client.channels.fetch(id).catch((err: unknown) => {
     if (err instanceof DiscordAPIError && err.code === 10003) {
       return null;
@@ -539,12 +556,23 @@ export async function fetchChannel(id: string, type: ChannelType) {
   return channel;
 }
 
+export async function fetchChannel(id: string) {
+  const channel = await client.channels.fetch(id).catch((err: unknown) => {
+    if (err instanceof DiscordAPIError && err.code === 10003) {
+      return null;
+    }
+    throw err;
+  });
+
+  return channel;
+}
+
 // helper function to fetch message
-async function fetchMessage(
+export async function fetchMessage(
   channelId: string,
   messageId: string,
 ): Promise<Message | null> {
-  const channel = await client.channels.fetch(channelId);
+  const channel = await fetchChannel(channelId);
 
   if (!channel || !channel.isTextBased())
     throw new Error("channel not text based");

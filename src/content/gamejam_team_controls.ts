@@ -1,6 +1,11 @@
 import { client } from "@/services/client.js";
 import { confirmPrompt } from "@/services/confirm_prompt.js";
-import { GamejamData, type GamejamTeam } from "@/services/gamejam_data.js";
+import {
+  fetchChannel,
+  fetchMessage,
+  GamejamData,
+  type GamejamTeam,
+} from "@/services/gamejam_data.js";
 import { leave_team, update_team_channels } from "@/services/gamejam_teams.js";
 import { buttonRegistry, modalRegistry } from "@/services/registry.js";
 import {
@@ -94,9 +99,9 @@ buttonRegistry.set("accept_join", async (interaction) => {
   GamejamData.Teams.add_to_team(request.user, request.team);
 
   try {
-    (
-      (await client.channels.fetch(interaction.channelId)) as TextChannel
-    ).messages.delete(interaction.message.id);
+    const channel = await fetchChannel(interaction.channelId);
+    if (!channel?.isTextBased()) return;
+    channel.messages.delete(interaction.message.id);
   } catch {
     console.log("deletion failed");
   }
@@ -122,9 +127,9 @@ buttonRegistry.set("reject_join", async (interaction) => {
   }
 
   try {
-    (
-      (await client.channels.fetch(interaction.channelId)) as TextChannel
-    ).messages.delete(interaction.message.id);
+    const channel = await fetchChannel(interaction.channelId);
+    if (!channel?.isTextBased()) return;
+    channel.messages.delete(interaction.message.id);
   } catch {
     console.log("deletion failed");
   }

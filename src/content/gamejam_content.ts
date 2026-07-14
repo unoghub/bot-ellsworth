@@ -142,7 +142,7 @@ modalRegistry.set("create_jam_team", async (interaction) => {
   });
 
   const voice_channel = await create_voice_communication(team_name);
-  const team = GamejamData.Teams.create_team({
+  const team = GamejamData.Teams.set_team({
     owner: interaction.user,
     team_name,
     control_message: message,

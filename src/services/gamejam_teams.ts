@@ -11,7 +11,14 @@ import {
   type ForumThreadChannel,
   type OverwriteResolvable,
 } from "discord.js";
-import { fetchChannel, GamejamData, type GamejamTeam } from "./gamejam_data.js";
+import {
+  fetchChannel,
+  fetchChannelWithType,
+  fetchMessage,
+  GamejamData,
+  type GamejamTeam,
+  type RawGamejamTeam,
+} from "./gamejam_data.js";
 import { GenerateTeamView } from "@/content/gamejam_team_controls.js";
 import { client } from "./client.js";
 
@@ -223,6 +230,22 @@ export async function create_voice_communication(
   return channel;
 }
 
+async function soft_delete_team(team: RawGamejamTeam) {
+  const archiveChannel = await GamejamData.ArchiveCategory.get();
+
+  fetchChannelWithType(team.voice_channel, ChannelType.GuildVoice).then(
+    (channel) => {
+      if (!channel) return;
+      if (archiveChannel) {
+        (channel as VoiceChannel).setParent(archiveChannel);
+      } else {
+        channel.delete();
+      }
+    },
+  );
+  GamejamData.Teams.delete_with_id(team.id);
+}
+
 client.on(Events.ThreadDelete, async (thread) => {
   if (!thread.parent) return;
   if (thread.parent.id !== (await GamejamData.TeamsForum.Channel.get())?.id)
@@ -233,16 +256,49 @@ client.on(Events.ThreadDelete, async (thread) => {
   if (!team) return;
 
   console.log("team channel deleted, deleting team.");
-
-  const archiveChannel = await GamejamData.ArchiveCategory.get();
-
-  fetchChannel(team.voice_channel, ChannelType.GuildVoice).then((channel) => {
-    if (!channel) return;
-    if (archiveChannel) {
-      (channel as VoiceChannel).setParent(archiveChannel);
-    } else {
-      channel.delete();
-    }
-  });
-  GamejamData.Teams.delete_with_id(team.id);
+  soft_delete_team(team);
 });
+
+export async function validate_team_channels() {
+  const raw_teams = await GamejamData.Teams.raw_get_all();
+
+  await Promise.all(
+    raw_teams.map(async (team_raw) => {
+      const thread = await fetchChannel(team_raw.control_channel);
+      if (!thread) {
+        console.log("team with missing thread, deleting team.");
+        soft_delete_team(team_raw);
+        return;
+      }
+
+      var modified = false;
+      let vc = await fetchChannel(team_raw.voice_channel);
+      if (!vc) {
+        console.log("team with missing vc, recreating.");
+        vc = await create_voice_communication(team_raw.team_name);
+        modified = true;
+      }
+      let message = await fetchMessage(thread.id, team_raw.buttons_message);
+      if (!message) {
+        console.log("team with missing message, resending.");
+        message = await create_control_message(thread as ThreadChannel);
+        modified = true;
+      }
+
+      const team = {
+        id: team_raw.id,
+        team_name: team_raw.team_name,
+        owner: await client.users.fetch(team_raw.owner_id),
+        voice_channel: vc as VoiceChannel,
+        control_message: message,
+        thread: thread as ThreadChannel,
+      };
+
+      if (modified) {
+        await GamejamData.Teams.set_team(team);
+      }
+
+      update_team_channels(team);
+    }),
+  );
+}

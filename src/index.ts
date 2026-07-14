@@ -1,7 +1,7 @@
 import { env } from "./env.js";
 import { Events, MessageFlags } from "discord.js";
 import commandsIndex from "./commands/index.js";
-import { client } from "./services/client.js";
+import { client, service_ready } from "./services/client.js";
 import {
   buttonRegistry,
   commandsRegistry,
@@ -17,6 +17,14 @@ client.on(Events.ClientReady, (readyClient) => {
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
+  if (!service_ready.status) {
+    if (interaction.isRepliable())
+      interaction.reply({
+        content: "Service is not ready yet. Please try again later.",
+        flags: MessageFlags.Ephemeral,
+      });
+    return;
+  }
   try {
     if (interaction.isChatInputCommand()) {
       const handler = commandsRegistry.get(interaction.commandName);
