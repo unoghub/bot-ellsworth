@@ -4,10 +4,9 @@ build
 
 #Dotfiles
 .git
-.env
-.env*
 .prettierrc
 .vscode
+
 
 #Documentation Files
 README.md
@@ -19,7 +18,5 @@ yarn-error.log
 *.log
 
 #Docker files
-Dockerfile
-docker-compose.yml
 
 gamejam_db.json
