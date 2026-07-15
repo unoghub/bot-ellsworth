@@ -16,7 +16,9 @@ client.on(Events.ChannelDelete, async (channel) => {
   GamejamData.Menu.Message.clear();
 });
 
-export async function create_panel_channel(): Promise<TextChannel> {
+export async function create_panel_channel(options?: {
+  new?: boolean;
+}): Promise<TextChannel> {
   const guild = await GamejamData.Guild.get();
   if (!guild) throw new Error("no guild");
 
@@ -26,11 +28,14 @@ export async function create_panel_channel(): Promise<TextChannel> {
       deny: ["SendMessages"],
     },
   ] as OverwriteResolvable[];
-  const existingChannel = (await GamejamData.Menu.Channel.get()) as TextChannel;
-  if (existingChannel) {
-    console.log("Menu channel already exists");
-    existingChannel.permissionOverwrites.set(perms);
-    return existingChannel as TextChannel;
+  if (!options?.new) {
+    const existingChannel =
+      (await GamejamData.Menu.Channel.get()) as TextChannel;
+    if (existingChannel) {
+      console.log("Menu channel already exists");
+      existingChannel.permissionOverwrites.set(perms);
+      return existingChannel as TextChannel;
+    }
   }
 
   const channel = await guild.channels.create({

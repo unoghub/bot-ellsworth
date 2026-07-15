@@ -59,12 +59,15 @@ export async function removeJammerRoleFromUser(user: User): Promise<void> {
 
 export async function createJammerRole(
   interaction: Interaction,
+  options?: { new?: boolean },
 ): Promise<Role> {
-  const existingRole = await GamejamData.JammerRole.get();
+  if (!options?.new) {
+    const existingRole = await GamejamData.JammerRole.get();
 
-  if (existingRole) {
-    console.log("Jammer role already exists");
-    return existingRole;
+    if (existingRole) {
+      console.log("Jammer role already exists");
+      return existingRole;
+    }
   }
 
   if (!interaction.guild) throw new Error("Interaction is not from a guild.");
@@ -83,12 +86,15 @@ export async function createJammerRole(
 
 export async function createOperatorRole(
   interaction: Interaction,
+  options?: { new?: boolean },
 ): Promise<Role> {
-  const existingRole = await GamejamData.OperatorRole.get();
+  if (!options?.new) {
+    const existingRole = await GamejamData.OperatorRole.get();
 
-  if (existingRole) {
-    console.log("Operator role alreaedy exists");
-    return existingRole;
+    if (existingRole) {
+      console.log("Operator role alreaedy exists");
+      return existingRole;
+    }
   }
 
   if (!interaction.guild) throw new Error("Interaction is not from a guild.");

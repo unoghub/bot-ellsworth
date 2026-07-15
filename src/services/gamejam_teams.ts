@@ -28,7 +28,9 @@ client.on(Events.ChannelDelete, async (channel) => {
   GamejamData.TeamsForum.Channel.clear();
 });
 
-export async function create_teams_channel(): Promise<ForumChannel> {
+export async function create_teams_channel(options?: {
+  new?: boolean;
+}): Promise<ForumChannel> {
   const guild = await GamejamData.Guild.get();
   if (!guild) throw new Error("no guild");
 
@@ -41,7 +43,7 @@ export async function create_teams_channel(): Promise<ForumChannel> {
   var perms = [
     {
       id: jammerRole.id,
-      allow: ["ViewChannel"],
+      allow: ["ViewChannel", "SendMessagesInThreads"],
     },
     {
       id: operatorRole.id,
@@ -58,12 +60,14 @@ export async function create_teams_channel(): Promise<ForumChannel> {
     },
   ] as OverwriteResolvable[];
 
-  const existingChannel =
-    (await GamejamData.TeamsForum.Channel.get()) as ForumChannel;
-  if (existingChannel) {
-    console.log("Menu channel already exists");
-    existingChannel.permissionOverwrites.set(perms);
-    return existingChannel as ForumChannel;
+  if (!options?.new) {
+    const existingChannel =
+      (await GamejamData.TeamsForum.Channel.get()) as ForumChannel;
+    if (existingChannel) {
+      console.log("Menu channel already exists");
+      existingChannel.permissionOverwrites.set(perms);
+      return existingChannel as ForumChannel;
+    }
   }
 
   const channel = await guild.channels.create({
@@ -94,9 +98,12 @@ export async function create_team_thread(teamData: {
 export async function create_control_message(
   thread: ThreadChannel,
 ): Promise<Message<boolean>> {
-  return thread.send({
+  const out = await thread.send({
     content: "placeholder",
   });
+
+  out.pin();
+  return out;
 }
 
 export async function update_team_channels(team: GamejamTeam) {
@@ -126,7 +133,9 @@ export async function leave_team(user: User, team: GamejamTeam) {
   }
 }
 
-export async function create_communications_category(): Promise<CategoryChannel> {
+export async function create_communications_category(options?: {
+  new?: boolean;
+}): Promise<CategoryChannel> {
   const guild = await GamejamData.Guild.get();
   if (!guild) throw new Error("no guild");
 
@@ -151,11 +160,13 @@ export async function create_communications_category(): Promise<CategoryChannel>
     },
   ] as OverwriteResolvable[];
 
-  const existingCategory = await GamejamData.CommunicationsCategory.get();
-  if (existingCategory) {
-    console.log("Communications category already exists");
-    existingCategory.permissionOverwrites.set(perms);
-    return existingCategory as CategoryChannel;
+  if (!options?.new) {
+    const existingCategory = await GamejamData.CommunicationsCategory.get();
+    if (existingCategory) {
+      console.log("Communications category already exists");
+      existingCategory.permissionOverwrites.set(perms);
+      return existingCategory as CategoryChannel;
+    }
   }
 
   const category = await guild.channels.create({

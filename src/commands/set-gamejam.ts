@@ -1,19 +1,4 @@
-import { GamejamData } from "@/services/gamejam_data.js";
 import { setup_gamejam } from "@/services/gamejam_main.js";
-import { create_archive_category } from "@/services/gamejam_operator.js";
-import {
-  create_panel_channel,
-  update_panel_message,
-} from "@/services/gamejam_panel.js";
-import {
-  createJammerRole,
-  createOperatorRole,
-} from "@/services/gamejam_roles.js";
-import {
-  create_communications_category,
-  create_teams_channel,
-  validate_team_channels,
-} from "@/services/gamejam_teams.js";
 import type { Command } from "@/types/command.js";
 import {
   MessageFlags,
@@ -25,7 +10,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("set-jam")
     .setDescription("Sets role associated with the game jam participants.")
-    .setDefaultMemberPermissions(PermissionFlagsBits.CreateEvents),
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   async execute(interaction) {
     if (!interaction.guild) {
       await interaction.reply({

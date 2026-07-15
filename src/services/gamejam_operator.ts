@@ -5,7 +5,9 @@ import {
 } from "discord.js";
 import { GamejamData } from "./gamejam_data.js";
 
-export async function create_archive_category(): Promise<CategoryChannel> {
+export async function create_archive_category(options?: {
+  new?: boolean;
+}): Promise<CategoryChannel> {
   const guild = await GamejamData.Guild.get();
   if (!guild) throw new Error("no guild");
 
@@ -26,11 +28,13 @@ export async function create_archive_category(): Promise<CategoryChannel> {
     },
   ] as OverwriteResolvable[];
 
-  const existingCategory = await GamejamData.ArchiveCategory.get();
-  if (existingCategory) {
-    console.log("Communications category already exists");
-    existingCategory.permissionOverwrites.set(perms);
-    return existingCategory as CategoryChannel;
+  if (!options?.new) {
+    const existingCategory = await GamejamData.ArchiveCategory.get();
+    if (existingCategory) {
+      console.log("Communications category already exists");
+      existingCategory.permissionOverwrites.set(perms);
+      return existingCategory as CategoryChannel;
+    }
   }
 
   const category = await guild.channels.create({
