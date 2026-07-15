@@ -21,6 +21,7 @@ import {
 } from "./gamejam_data.js";
 import { GenerateTeamView } from "@/content/gamejam_team_controls.js";
 import { client } from "./client.js";
+import { removeJammerRoleFromUser } from "./gamejam_roles.js";
 
 client.on(Events.ChannelDelete, async (channel) => {
   if (channel.id !== (await GamejamData.TeamsForum.Channel.rawget())) return;
@@ -120,6 +121,16 @@ export async function delete_team(team: GamejamTeam) {
 
   await team.voice_channel.setParent(archive_category);
   await team.thread.delete();
+}
+
+export async function leave_jam(user: User) {
+  const team = await GamejamData.Participants.get_team(user);
+  if (team) {
+    leave_team(user, team);
+  }
+
+  await removeJammerRoleFromUser(user);
+  GamejamData.Participants.remove(user);
 }
 
 export async function leave_team(user: User, team: GamejamTeam) {

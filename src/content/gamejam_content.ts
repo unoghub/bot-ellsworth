@@ -7,6 +7,7 @@ import {
 import {
   create_team_thread,
   create_voice_communication,
+  leave_jam,
   leave_team,
   update_team_channels,
 } from "@/services/gamejam_teams.js";
@@ -43,6 +44,14 @@ buttonRegistry.set("join_jam", async (interaction) => {
 });
 
 modalRegistry.set("join_jam", async (interaction) => {
+  if (GamejamData.Blacklist.exists(interaction.user)) {
+    interaction.reply({
+      content: "You are blacklisted from the game jam and cannot join.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
   const legal_name = interaction.fields.getTextInputValue("nameInput");
   const old_data = GamejamData.Participants.get(interaction.user);
 
@@ -78,13 +87,7 @@ buttonRegistry.set("leave_jam", async (interaction) => {
     interaction,
     "Are you sure you want to leave the game jam?",
     async (confirmation) => {
-      const team = await GamejamData.Participants.get_team(interaction.user);
-      if (team) {
-        leave_team(interaction.user, team);
-      }
-
-      await removeJammerRoleFromUser(interaction.user);
-      GamejamData.Participants.remove(interaction.user);
+      await leave_jam(interaction.user);
 
       confirmation.reply({
         content: "Successfully left the game jam.",
