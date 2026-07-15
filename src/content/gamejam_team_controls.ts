@@ -268,6 +268,17 @@ export async function GenerateTeamView(
 
   const memberList = members.map((member) => `• <@${member.id}>`).join("\n");
 
+  var description = `**Leader:**<@${team.owner.id}>\n**Members:**\n${memberList}`;
+  const submission = GamejamData.Submissions.get(team);
+
+  if (submission) {
+    description.concat(`\n**Submission:** \`${submission.game_name}\``);
+    if (submission.description) {
+      description.concat(`\n**Description:** ${submission.description}`);
+    }
+    description.concat(`\n**URL:** ${submission.game_url}`);
+  }
+
   return {
     components: [
       new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -289,7 +300,7 @@ export async function GenerateTeamView(
       new EmbedBuilder()
         .setColor(0x0099ff)
         .setTitle(`**Team: \`${team.team_name}\`**`)
-        .setDescription(`**Members:**\n${memberList}`),
+        .setDescription(description),
     ],
   };
 }

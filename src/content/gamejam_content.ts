@@ -16,6 +16,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  EmbedBuilder,
   LabelBuilder,
   MessageFlags,
   ModalBuilder,
@@ -161,22 +162,30 @@ modalRegistry.set("create_jam_team", async (interaction) => {
   });
 });
 
-export const GamejamMenu = {
-  content: "Welcome to the game jam and stuff",
-  components: [
-    new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setCustomId("join_jam")
-        .setLabel("Join the Game Jam")
-        .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setCustomId("create_jam_team")
-        .setLabel("Create a Jam team")
-        .setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder()
-        .setCustomId("leave_jam")
-        .setLabel("Leave the Jam")
-        .setStyle(ButtonStyle.Danger),
-    ),
-  ],
-} satisfies MessageCreateOptions;
+export function generateGamejamMenu() {
+  return {
+    components: [
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId("join_jam")
+          .setLabel("Jame Katıl")
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId("create_jam_team")
+          .setLabel("Ekip oluştur")
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId("leave_jam")
+          .setLabel("Jam'den çık")
+          .setStyle(ButtonStyle.Danger),
+      ),
+    ],
+    embeds: [
+      new EmbedBuilder()
+        .setTitle("ÜNOG Ankara Game Jam 2026")
+        .setDescription(
+          `ÜNOG'un ilk defa düzenlemiş olduğu Ankara Game Jam etkiniğimize hoşgeldiniz. Aşağıdaki butonlara tıklayarak katılım sağlayabilirsiniz.`,
+        ),
+    ],
+  } satisfies MessageCreateOptions;
+}

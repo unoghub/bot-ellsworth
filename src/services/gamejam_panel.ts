@@ -6,7 +6,7 @@ import {
   type OverwriteResolvable,
 } from "discord.js";
 import { GamejamData } from "./gamejam_data.js";
-import { GamejamMenu } from "@/content/gamejam_content.js";
+import { generateGamejamMenu } from "@/content/gamejam_content.js";
 import { client } from "./client.js";
 
 client.on(Events.ChannelDelete, async (channel) => {
@@ -57,9 +57,9 @@ export async function update_panel_message(): Promise<Message> {
   var fetched_message = await GamejamData.Menu.Message.get({ force: true });
 
   if (!fetched_message) {
-    fetched_message = await channel.send(GamejamMenu);
+    fetched_message = await channel.send(generateGamejamMenu());
     GamejamData.Menu.Message.set(fetched_message);
-  } else await fetched_message.edit(GamejamMenu);
+  } else await fetched_message.edit(generateGamejamMenu());
 
   return fetched_message;
 }
