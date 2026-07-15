@@ -11,7 +11,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("refresh")
     .setDescription("Force update cycle.")
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageEvents),
   async execute(interaction) {
     update_panel_message();
     validate_team_channels();

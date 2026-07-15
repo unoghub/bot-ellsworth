@@ -16,8 +16,8 @@ export default {
   data: new SlashCommandBuilder()
     .setName("remove_from_team")
     .setDescription("Removes user from the jam team.")
-    .addUserOption(
-      new SlashCommandUserOption().setName("user").setRequired(true),
+    .addUserOption((option) =>
+      option.setName("user").setDescription("user").setRequired(true),
     )
     .addStringOption(
       new SlashCommandStringOption()
@@ -25,7 +25,7 @@ export default {
         .setDescription("Reason for removing the user.")
         .setRequired(false),
     )
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageEvents),
   async execute(interaction) {
     const operator_role: Role | null = await GamejamData.OperatorRole.get();
     if (!operator_role) {
@@ -42,6 +42,7 @@ export default {
         content: "You do not have permission to use this command.",
         flags: MessageFlags.Ephemeral,
       });
+      return;
     }
 
     const target_user: User = interaction.options.getUser("user", true);

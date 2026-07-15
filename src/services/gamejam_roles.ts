@@ -1,6 +1,7 @@
 import {
   Colors,
   Events,
+  PermissionFlagsBits,
   Role,
   User,
   type Interaction,
@@ -105,6 +106,7 @@ export async function createOperatorRole(
       primaryColor: Colors.Red,
     },
     reason: "Operator role for Game Jam",
+    permissions: [PermissionFlagsBits.ManageEvents],
   });
   GamejamData.OperatorRole.set(role);
 

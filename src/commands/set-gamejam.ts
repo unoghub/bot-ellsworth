@@ -10,7 +10,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("set-jam")
     .setDescription("Sets role associated with the game jam participants.")
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageEvents),
   async execute(interaction) {
     if (!interaction.guild) {
       await interaction.reply({
