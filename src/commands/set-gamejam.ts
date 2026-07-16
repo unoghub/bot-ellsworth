@@ -9,19 +9,19 @@ import {
 export default {
   data: new SlashCommandBuilder()
     .setName("set-jam")
-    .setDescription("Sets role associated with the game jam participants.")
+    .setDescription("Jam katılımcılarıyla ilişkili rolü ayarlar.")
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageEvents),
   async execute(interaction) {
     if (!interaction.guild) {
       await interaction.reply({
-        content: "This command can only be used in a server.",
+        content: "Bu komut yalnızca bir sunucuda kullanılabilir.",
         flags: MessageFlags.Ephemeral,
       });
       return;
     }
     setup_gamejam(interaction);
     interaction.reply({
-      content: "Everything set up!",
+      content: "Her şey kuruldu!",
       flags: MessageFlags.Ephemeral,
     });
   },

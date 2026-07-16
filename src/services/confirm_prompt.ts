@@ -20,11 +20,11 @@ export async function confirmPrompt(
       new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
           .setCustomId("confirm")
-          .setLabel("Yes")
+          .setLabel("Evet")
           .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
           .setCustomId("cancel")
-          .setLabel("No")
+          .setLabel("Hayır")
           .setStyle(ButtonStyle.Secondary),
       ),
     ],
@@ -45,14 +45,14 @@ export async function confirmPrompt(
       await func(confirmation);
     } else {
       await confirmation.update({
-        content: "Cancelled.",
+        content: "İptal edildi.",
         components: [],
       });
     }
   } catch {
     try {
       await interaction.editReply({
-        content: "Confirmation timed out.",
+        content: "Onaylama süresi doldu.",
         components: [],
       });
     } catch (e) {

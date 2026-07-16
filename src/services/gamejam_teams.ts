@@ -89,7 +89,7 @@ export async function create_team_thread(teamData: {
   if (!channel) throw new Error("no channel");
   const forumThreadChannel = await channel.threads.create({
     name: teamData.team_name,
-    message: { content: "placeholder" },
+    message: { content: teamData.team_name },
   });
   const message = await forumThreadChannel.fetchStarterMessage();
   if (!message) throw new Error("What the hey?");
@@ -100,7 +100,7 @@ export async function create_control_message(
   thread: ThreadChannel,
 ): Promise<Message<boolean>> {
   const out = await thread.send({
-    content: "placeholder",
+    content: "Team controls",
   });
 
   out.pin();

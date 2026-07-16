@@ -2,7 +2,7 @@ import { type Command } from "@/types/command.js";
 import { MessageFlags, SlashCommandBuilder } from "discord.js";
 
 export default {
-  data: new SlashCommandBuilder().setName("ping").setDescription("Check ping."),
+  data: new SlashCommandBuilder().setName("ping").setDescription("Pingi kontrol et."),
   async execute(interaction) {
     interaction.reply({
       content: "Pong!",

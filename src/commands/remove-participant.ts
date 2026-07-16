@@ -15,14 +15,14 @@ import {
 export default {
   data: new SlashCommandBuilder()
     .setName("remove_from_jam")
-    .setDescription("Removes user from the jam.")
+    .setDescription("Kullanıcıyı jam'den çıkarır.")
     .addUserOption((option) =>
-      option.setName("user").setDescription("user").setRequired(true),
+      option.setName("user").setDescription("kullanıcı").setRequired(true),
     )
     .addStringOption((option) =>
       option
         .setName("reason")
-        .setDescription("Reason for removing the user.")
+        .setDescription("Kullanıcıyı çıkarma sebebi.")
         .setRequired(false),
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageEvents),
@@ -30,7 +30,7 @@ export default {
     const operator_role: Role | null = await GamejamData.OperatorRole.get();
     if (!operator_role) {
       await interaction.reply({
-        content: "Operator role is not set. Please set it first.",
+        content: "Operatör rolü ayarlanmamış. Lütfen önce bunu ayarlayın.",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -39,7 +39,7 @@ export default {
     const member = interaction.member as GuildMember;
     if (!member.roles.cache.has(operator_role.id)) {
       await interaction.reply({
-        content: "You do not have permission to use this command.",
+        content: "Bu komutu kullanma izniniz yok.",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -48,7 +48,7 @@ export default {
     const target_user: User = interaction.options.getUser("user", true);
     if (!GamejamData.Participants.exists(target_user)) {
       await interaction.reply({
-        content: `User ${target_user.tag} is not a participant.`,
+        content: `${target_user.tag} kullanıcısı bir katılımcı değil.`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -61,14 +61,14 @@ export default {
 
     target_user
       .send(
-        `You have been removed from the game jam.${reason ? ` Reason: ${reason}` : ""}`,
+        `Game jam'den çıkarıldınız.${reason ? ` Sebep: ${reason}` : ""}`,
       )
       .catch(() => {
         console.log(`Failed to send DM to ${target_user.tag}`);
       });
 
     await interaction.reply({
-      content: `User ${target_user.tag} has been removed.${reason ? ` Reason: ${reason}` : ""}`,
+      content: `${target_user.tag} kullanıcısı çıkarıldı.${reason ? ` Sebep: ${reason}` : ""}`,
       flags: MessageFlags.Ephemeral,
     });
   },

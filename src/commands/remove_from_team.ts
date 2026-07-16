@@ -15,14 +15,14 @@ import {
 export default {
   data: new SlashCommandBuilder()
     .setName("remove_from_team")
-    .setDescription("Removes user from the jam team.")
+    .setDescription("Kullanıcıyı jam ekibinden çıkarır.")
     .addUserOption((option) =>
-      option.setName("user").setDescription("user").setRequired(true),
+      option.setName("user").setDescription("kullanıcı").setRequired(true),
     )
     .addStringOption(
       new SlashCommandStringOption()
         .setName("reason")
-        .setDescription("Reason for removing the user.")
+        .setDescription("Kullanıcıyı çıkarma sebebi.")
         .setRequired(false),
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageEvents),
@@ -30,7 +30,7 @@ export default {
     const operator_role: Role | null = await GamejamData.OperatorRole.get();
     if (!operator_role) {
       await interaction.reply({
-        content: "Operator role is not set. Please set it first.",
+        content: "Operatör rolü ayarlanmamış. Lütfen önce bunu ayarlayın.",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -39,7 +39,7 @@ export default {
     const member = interaction.member as GuildMember;
     if (!member.roles.cache.has(operator_role.id)) {
       await interaction.reply({
-        content: "You do not have permission to use this command.",
+        content: "Bu komutu kullanma izniniz yok.",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -50,7 +50,7 @@ export default {
       await GamejamData.Participants.get_team(target_user);
     if (!team) {
       await interaction.reply({
-        content: `User ${target_user.tag} is not in a team.`,
+        content: `${target_user.tag} kullanıcısı bir ekipte değil.`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -63,14 +63,14 @@ export default {
 
     target_user
       .send(
-        `You have been removed from the team \`${team.team_name}\`.${reason ? ` Reason: ${reason}` : ""}`,
+        `\`${team.team_name}\` ekibinden çıkarıldınız.${reason ? ` Sebep: ${reason}` : ""}`,
       )
       .catch(() => {
         console.log(`Failed to send DM to ${target_user.tag}`);
       });
 
     await interaction.reply({
-      content: `User ${target_user.tag} has been removed from the team \`${team.team_name}\`.`,
+      content: `${target_user.tag} kullanıcısı \`${team.team_name}\` ekibinden çıkarıldı.`,
       flags: MessageFlags.Ephemeral,
     });
   },

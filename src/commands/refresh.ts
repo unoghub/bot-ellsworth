@@ -10,13 +10,13 @@ import {
 export default {
   data: new SlashCommandBuilder()
     .setName("refresh")
-    .setDescription("Force update cycle.")
+    .setDescription("Güncelleme döngüsünü zorla çalıştırır.")
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageEvents),
   async execute(interaction) {
     update_panel_message();
     validate_team_channels();
     interaction.reply({
-      content: "Refreshed!",
+      content: "Güncellendi!",
       flags: MessageFlags.Ephemeral,
     });
   },
