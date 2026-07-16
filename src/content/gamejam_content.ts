@@ -29,11 +29,11 @@ buttonRegistry.set("join_jam", async (interaction) => {
   await interaction.showModal(
     new ModalBuilder()
       .setCustomId("join_jam")
-      .setTitle("Join Game Jam")
+      .setTitle("Jame Katıl")
       .addLabelComponents(
         new LabelBuilder()
-          .setLabel("Legal Name")
-          .setDescription("Your legal name")
+          .setLabel("Ad Soyad")
+          .setDescription("Yasal ad ve soyadınız")
           .setTextInputComponent(
             new TextInputBuilder()
               .setCustomId("nameInput")
@@ -47,7 +47,7 @@ buttonRegistry.set("join_jam", async (interaction) => {
 modalRegistry.set("join_jam", async (interaction) => {
   if (GamejamData.Blacklist.exists(interaction.user)) {
     interaction.reply({
-      content: "You are blacklisted from the game jam and cannot join.",
+      content: "Jam'den yasaklandığınız için katılamazsınız.",
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -64,12 +64,12 @@ modalRegistry.set("join_jam", async (interaction) => {
 
   if (old_data) {
     interaction.reply({
-      content: "Successfully updated your game jam information.",
+      content: "Jam bilgileriniz başarıyla güncellendi.",
       flags: MessageFlags.Ephemeral,
     });
   } else {
     interaction.reply({
-      content: "Successfully joined the game jam.",
+      content: "Jam'e başarıyla katıldınız.",
       flags: MessageFlags.Ephemeral,
     });
   }
@@ -78,7 +78,7 @@ modalRegistry.set("join_jam", async (interaction) => {
 buttonRegistry.set("leave_jam", async (interaction) => {
   if (!GamejamData.Participants.get(interaction.user)) {
     interaction.reply({
-      content: "You are not currently a participant in the game jam.",
+      content: "Şu anda jam'e katılımcı olarak kayıtlı değilsiniz.",
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -86,12 +86,12 @@ buttonRegistry.set("leave_jam", async (interaction) => {
 
   await confirmPrompt(
     interaction,
-    "Are you sure you want to leave the game jam?",
+    "Jam'den ayrılmak istediğinize emin misiniz?",
     async (confirmation) => {
       await leave_jam(interaction.user);
 
       confirmation.reply({
-        content: "Successfully left the game jam.",
+        content: "Jam'den başarıyla ayrıldınız.",
         flags: MessageFlags.Ephemeral,
       });
     },
@@ -101,14 +101,14 @@ buttonRegistry.set("leave_jam", async (interaction) => {
 buttonRegistry.set("create_jam_team", async (interaction) => {
   if (!GamejamData.Participants.get(interaction.user)) {
     interaction.reply({
-      content: "You must be a participant in the game jam to create a team.",
+      content: "Ekip oluşturabilmek için jam'e katılımcı olmalısınız.",
       flags: MessageFlags.Ephemeral,
     });
     return;
   }
   if (GamejamData.Participants.in_a_team(interaction.user)) {
     interaction.reply({
-      content: "You are already in a team. You cannot create a new team.",
+      content: "Zaten bir ekiptesiniz. Yeni bir ekip oluşturamazsınız.",
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -116,11 +116,11 @@ buttonRegistry.set("create_jam_team", async (interaction) => {
   await interaction.showModal(
     new ModalBuilder()
       .setCustomId("create_jam_team")
-      .setTitle("Create Team")
+      .setTitle("Ekip Oluştur")
       .addLabelComponents(
         new LabelBuilder()
-          .setLabel("Team Name")
-          .setDescription("Team Name")
+          .setLabel("Ekip Adı")
+          .setDescription("Ekibinizin adı")
           .setTextInputComponent(
             new TextInputBuilder()
               .setCustomId("team_name")
@@ -135,7 +135,7 @@ modalRegistry.set("create_jam_team", async (interaction) => {
   const team_name = interaction.fields.getTextInputValue("team_name");
   if (GamejamData.Participants.in_a_team(interaction.user)) {
     interaction.reply({
-      content: "You are already in a team. You cannot create a new team.",
+      content: "Zaten bir ekiptesiniz. Yeni bir ekip oluşturamazsınız.",
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -157,7 +157,7 @@ modalRegistry.set("create_jam_team", async (interaction) => {
   await update_team_channels(team);
 
   interaction.reply({
-    content: `Successfully created team "${team_name}".`,
+    content: `"${team_name}" ekibi başarıyla oluşturuldu.`,
     flags: MessageFlags.Ephemeral,
   });
 });

@@ -27,14 +27,14 @@ import {
 buttonRegistry.set("join_team", async (interaction) => {
   if (!GamejamData.Participants.exists(interaction.user)) {
     interaction.reply({
-      content: "You must join the game jam before joining a team.",
+      content: "Bir ekibe katılmadan önce jam'e katılmalısınız.",
       flags: MessageFlags.Ephemeral,
     });
     return;
   }
   if (GamejamData.Participants.in_a_team(interaction.user)) {
     interaction.reply({
-      content: "You are already in a team. You cannot join another team.",
+      content: "Zaten bir ekiptesiniz. Başka bir ekibe katılamazsınız.",
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -46,7 +46,7 @@ buttonRegistry.set("join_team", async (interaction) => {
   if (!team) throw new Error("no team");
   if (GamejamData.JoinRequests.exists(interaction.user, team)) {
     interaction.reply({
-      content: "You have already requested to join this team.",
+      content: "Bu ekibe katılmak için zaten bir istek gönderdiniz.",
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -59,7 +59,7 @@ buttonRegistry.set("join_team", async (interaction) => {
   GamejamData.JoinRequests.add(interaction.user, team, message);
 
   interaction.reply({
-    content: `Your request to join ${team.team_name} has been sent to the team owner.`,
+    content: `${team.team_name} ekibine katılma isteğiniz ekip sahibine gönderildi.`,
     flags: MessageFlags.Ephemeral,
   });
 });
@@ -69,16 +69,16 @@ function CreateJoinRequestMessage(
   team: GamejamTeam,
 ): MessageCreateOptions {
   return {
-    content: `User ${fromUser.tag} wants to join your team ${team.team_name}.`,
+    content: `${fromUser.tag} adlı kullanıcı ${team.team_name} ekibinize katılmak istiyor.`,
     components: [
       new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
           .setCustomId(`accept_join`)
-          .setLabel("Accept")
+          .setLabel("Kabul Et")
           .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
           .setCustomId(`reject_join`)
-          .setLabel("Reject")
+          .setLabel("Reddet")
           .setStyle(ButtonStyle.Danger),
       ),
     ],
@@ -89,7 +89,7 @@ buttonRegistry.set("accept_join", async (interaction) => {
   const request = await GamejamData.JoinRequests.pop(interaction.message);
   if (!request) {
     interaction.reply({
-      content: "This join request has already been handled.",
+      content: "Bu katılım isteği zaten işleme alınmış.",
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -108,10 +108,10 @@ buttonRegistry.set("accept_join", async (interaction) => {
 
   update_team_channels(request.team);
   request.user.send(
-    `Your request to join ${request.team?.team_name} has been accepted.`,
+    `${request.team?.team_name} ekibine katılma isteğiniz kabul edildi.`,
   );
   interaction.reply({
-    content: `You have accepted ${request.user.tag}'s request to join your team.`,
+    content: `${request.user.tag} kullanıcısının ekibinize katılma isteğini kabul ettiniz.`,
     flags: MessageFlags.Ephemeral,
   });
 });
@@ -120,7 +120,7 @@ buttonRegistry.set("reject_join", async (interaction) => {
   const request = await GamejamData.JoinRequests.pop(interaction.message);
   if (!request) {
     interaction.reply({
-      content: "This join request has already been handled.",
+      content: "Bu katılım isteği zaten işleme alınmış.",
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -134,10 +134,10 @@ buttonRegistry.set("reject_join", async (interaction) => {
     console.log("deletion failed");
   }
   request.user.send({
-    content: `Your request to join ${request.team?.team_name} has been rejected.`,
+    content: `${request.team?.team_name} ekibine katılma isteğiniz reddedildi.`,
   });
   interaction.reply({
-    content: `You have rejected ${request.user.tag}'s request to join your team.`,
+    content: `${request.user.tag} kullanıcısının ekibinize katılma isteğini reddettiniz.`,
     flags: MessageFlags.Ephemeral,
   });
 });
@@ -151,7 +151,7 @@ buttonRegistry.set("submit_game", async (interaction) => {
 
   if (interaction.user.id != team.owner.id) {
     interaction.reply({
-      content: "Only the team owner can submit the game.",
+      content: "Oyunu yalnızca ekip sahibi gönderebilir.",
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -160,10 +160,10 @@ buttonRegistry.set("submit_game", async (interaction) => {
   interaction.showModal(
     new ModalBuilder()
       .setCustomId("submit_game")
-      .setTitle("Submit Game")
+      .setTitle("Oyun Gönder")
       .addLabelComponents(
         new LabelBuilder()
-          .setLabel("Submission Name")
+          .setLabel("Oyun Adı")
           .setTextInputComponent(
             new TextInputBuilder()
               .setCustomId("game_name")
@@ -171,8 +171,8 @@ buttonRegistry.set("submit_game", async (interaction) => {
               .setRequired(true),
           ),
         new LabelBuilder()
-          .setLabel("Description")
-          .setDescription("Optional")
+          .setLabel("Açıklama")
+          .setDescription("İsteğe bağlı")
           .setTextInputComponent(
             new TextInputBuilder()
               .setCustomId("game_description")
@@ -180,8 +180,8 @@ buttonRegistry.set("submit_game", async (interaction) => {
               .setRequired(false),
           ),
         new LabelBuilder()
-          .setLabel("Game URL")
-          .setDescription("Preferably an itch.io link.")
+          .setLabel("Oyun Bağlantısı")
+          .setDescription("Tercihen bir itch.io bağlantısı.")
           .setTextInputComponent(
             new TextInputBuilder()
               .setCustomId("game_url")
@@ -201,7 +201,7 @@ modalRegistry.set("submit_game", async (interaction) => {
 
   if (interaction.user.id != team.owner.id) {
     interaction.reply({
-      content: "Only the team owner can submit the game.",
+      content: "Oyunu yalnızca ekip sahibi gönderebilir.",
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -220,7 +220,7 @@ modalRegistry.set("submit_game", async (interaction) => {
 
   update_team_channels(team);
   interaction.reply({
-    content: `Your game has been submitted!`,
+    content: `Oyununuz başarıyla gönderildi!`,
     flags: MessageFlags.Ephemeral,
   });
 });
@@ -234,7 +234,7 @@ buttonRegistry.set("leave_team", async (interaction) => {
 
   if (!GamejamData.Teams.user_in_team(interaction.user, team)) {
     interaction.reply({
-      content: "You are not in this team.",
+      content: "Bu ekipte değilsiniz.",
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -245,15 +245,15 @@ buttonRegistry.set("leave_team", async (interaction) => {
   confirmPrompt(
     interaction,
     ownerLeaving
-      ? "Are you sure? **If the team owner leaves, your team will be disbanded.**"
-      : "Are you sure you want to leave your team?",
+      ? "Emin misiniz? **Ekip sahibi ayrılırsa ekibiniz dağıtılacaktır.**"
+      : "Ekibinizden ayrılmak istediğinize emin misiniz?",
     async (confirmation) => {
       await leave_team(interaction.user, team);
       if (ownerLeaving) {
         await confirmation.deferUpdate();
       } else {
         await confirmation.update({
-          content: "You have left the team.",
+          content: "Ekipten ayrıldınız.",
           components: [],
         });
       }
@@ -268,15 +268,15 @@ export async function GenerateTeamView(
 
   const memberList = members.map((member) => `• <@${member.id}>`).join("\n");
 
-  var description = `**Leader:**<@${team.owner.id}>\n**Members:**\n${memberList}`;
+  var description = `**Lider:**<@${team.owner.id}>\n**Üyeler:**\n${memberList}`;
   const submission = GamejamData.Submissions.get(team);
 
   if (submission) {
-    description.concat(`\n**Submission:** \`${submission.game_name}\``);
+    description.concat(`\n**Gönderim:** \`${submission.game_name}\``);
     if (submission.description) {
-      description.concat(`\n**Description:** ${submission.description}`);
+      description.concat(`\n**Açıklama:** ${submission.description}`);
     }
-    description.concat(`\n**URL:** ${submission.game_url}`);
+    description.concat(`\n**Bağlantı:** ${submission.game_url}`);
   }
 
   return {
@@ -284,22 +284,22 @@ export async function GenerateTeamView(
       new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
           .setCustomId("join_team")
-          .setLabel("Join Team")
+          .setLabel("Ekibe Katıl")
           .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
           .setCustomId("submit_game")
-          .setLabel("Submit Game")
+          .setLabel("Oyun Gönder")
           .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
           .setCustomId("leave_team")
-          .setLabel("Leave Team")
+          .setLabel("Ekipten Ayrıl")
           .setStyle(ButtonStyle.Danger),
       ),
     ],
     embeds: [
       new EmbedBuilder()
         .setColor(0x0099ff)
-        .setTitle(`**Team: \`${team.team_name}\`**`)
+        .setTitle(`**Ekip: \`${team.team_name}\`**`)
         .setDescription(description),
     ],
   };

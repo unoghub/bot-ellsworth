@@ -20,7 +20,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (!service_ready.status) {
     if (interaction.isRepliable())
       interaction.reply({
-        content: "Service is not ready yet. Please try again later.",
+        content: "Hizmet henüz hazır değil. Lütfen daha sonra tekrar deneyin.",
         flags: MessageFlags.Ephemeral,
       });
     return;
@@ -47,12 +47,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
       try {
         if (interaction.replied || interaction.deferred) {
           await interaction.followUp({
-            content: `An unexpected error occurred.`,
+            content: `Beklenmedik bir hata oluştu.`,
             flags: MessageFlags.Ephemeral,
           });
         } else {
           await interaction.reply({
-            content: "An unexpected error occurred.",
+            content: "Beklenmedik bir hata oluştu.",
             flags: MessageFlags.Ephemeral,
           });
         }

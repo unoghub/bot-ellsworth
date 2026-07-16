@@ -13,14 +13,14 @@ import {
 export default {
   data: new SlashCommandBuilder()
     .setName("blacklist")
-    .setDescription("Blacklists user from jam.")
+    .setDescription("Kullanıcıyı jam'den yasaklar.")
     .addUserOption((option) =>
-      option.setName("user").setDescription("user").setRequired(true),
+      option.setName("user").setDescription("kullanıcı").setRequired(true),
     )
     .addStringOption((option) =>
       option
         .setName("reason")
-        .setDescription("Reason for blacklisting the user.")
+        .setDescription("Kullanıcıyı yasaklama sebebi.")
         .setRequired(false),
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageEvents),
@@ -28,7 +28,7 @@ export default {
     const operator_role: Role | null = await GamejamData.OperatorRole.get();
     if (!operator_role) {
       await interaction.reply({
-        content: "Operator role is not set. Please set it first.",
+        content: "Operatör rolü ayarlanmamış. Lütfen önce bunu ayarlayın.",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -37,7 +37,7 @@ export default {
     const member = interaction.member as GuildMember;
     if (!member.roles.cache.has(operator_role.id)) {
       await interaction.reply({
-        content: "You do not have permission to use this command.",
+        content: "Bu komutu kullanma izniniz yok.",
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -46,7 +46,7 @@ export default {
     const target_user: User = interaction.options.getUser("user", true);
     if (GamejamData.Blacklist.exists(target_user)) {
       await interaction.reply({
-        content: `User ${target_user.tag} is already blacklisted.`,
+        content: `${target_user.tag} kullanıcısı zaten yasaklı.`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -62,14 +62,14 @@ export default {
 
     target_user
       .send(
-        `You have been blacklisted from the game jam.${reason ? ` Reason: ${reason}` : ""}`,
+        `Game jam'den yasaklandınız.${reason ? ` Sebep: ${reason}` : ""}`,
       )
       .catch(() => {
         console.log(`Failed to send DM to ${target_user.tag}`);
       });
 
     await interaction.reply({
-      content: `User ${target_user.tag} has been blacklisted.${reason ? ` Reason: ${reason}` : ""}`,
+      content: `${target_user.tag} kullanıcısı yasaklandı.${reason ? ` Sebep: ${reason}` : ""}`,
       flags: MessageFlags.Ephemeral,
     });
   },
