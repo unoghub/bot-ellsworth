@@ -28,6 +28,7 @@
   "dependencies": {
     "discord.js": "^14.26.4",
     "dotenv": "^17.4.2",
+    "toml": "^5.0.0",
     "zod": "^4.4.3"
   }
 }

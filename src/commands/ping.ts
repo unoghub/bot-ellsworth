@@ -1,4 +1,4 @@
-import { type Command } from "@/command.js";
+import { type Command } from "@/types/command.js";
 import { SlashCommandBuilder } from "discord.js";
 
 export default {
