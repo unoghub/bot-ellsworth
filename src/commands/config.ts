@@ -13,14 +13,16 @@ export default {
             subcmd => subcmd.setName("get").setDescription("Get from config")
                 .addStringOption(option =>
                     option.setName("key").setDescription("Field key")
-                        .setChoices(...Object.entries(config.data).map(e => ({name: e[0], value: e[0]})))
+                        .setChoices(...Object.entries(config.data).map(e => ({ name: e[0], value: e[0] })))
                         .setRequired(true)
                 )
         )
         .addSubcommand(
             subcmd => subcmd.setName("set").setDescription("Set to config")
                 .addStringOption(option =>
-                    option.setName("key").setDescription("Field key").setRequired(true)
+                    option.setName("key").setDescription("Field key")
+                        .setChoices(...Object.entries(config.data).map(e => ({ name: e[0], value: e[0] })))
+                        .setRequired(true)
                 )
                 .addStringOption(option =>
                     option.setName("value").setDescription("New value").setRequired(true)
@@ -35,7 +37,7 @@ export default {
         const key = interaction.options.getString("key");
         const value = interaction.options.getString("value");
 
-        let message_content = "";
+        let message_content = "W.I.P.";
 
         switch (interaction.options.getSubcommand()) {
             case "get":
@@ -44,6 +46,10 @@ export default {
             case "set":
                 config.set(key!, value);
                 message_content = `Value of ${key} is now ${value}`;
+                break;
+            case "save":
+                Config.save();
+                message_content = `Config has been saved.`;
                 break;
         }
 

@@ -1,4 +1,4 @@
-import { loadConfig } from "@/util/loader.js";
+import { loadConfig, saveConfig } from "@/util/loader.js";
 
 export class Config {
 
@@ -13,6 +13,10 @@ export class Config {
             Config.instance = loadConfig();
         }
         return Config.instance;
+    }
+
+    static save(): void {
+        saveConfig(Config.instance);
     }
 
     get(key: string): any {

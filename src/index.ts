@@ -2,6 +2,7 @@ import { env } from "./env.js";
 import { Collection, Events, GatewayIntentBits } from "discord.js";
 import commandsIndex from "./commands/index.js";
 import { ExtendedClient, Config, type CommandHandler } from "@/types/types.js";
+import { saveConfig } from "./util/loader.js";
 
 const client = new ExtendedClient({
     intents: [
