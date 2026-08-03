@@ -1,44 +1,24 @@
 import { env } from "./env.js";
-import { Collection, Events, GatewayIntentBits } from "discord.js";
-import commandsIndex from "./commands/index.js";
-import { ExtendedClient, Config, type CommandHandler } from "@/types/types.js";
-import { saveConfig } from "./util/loader.js";
+import { GatewayIntentBits, type ClientEvents } from "discord.js";
+import { ExtendedClient, Config, type Event } from "@/types/types.js";
+import { loadCommands } from "./util/loader.js";
+import commands from "./commands/index.js";
+import events from "./events/index.js";
 
 const client = new ExtendedClient({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
-    ]}, 
-    Config.load()
-);
+    ]
+});
 
-var commands = new Collection<string, CommandHandler>();
+client.config = Config.load();
+client.commands = loadCommands(commands);
 
-for (const command of commandsIndex) {
-    commands.set(command.data.name, command.execute);
+for (const event of events) {
+    client.on(event.event as any, (...args: any[]) => (event.handle as any)(...args));
 }
-
-client.on(Events.ClientReady, (readyClient) => {
-    console.log(`Logged in as ${readyClient.user.tag}!`);
-});
-
-client.on(Events.InteractionCreate, async (interaction) => {
-    if (!interaction.isChatInputCommand()) return;
-
-    const execute = commands.get(interaction.commandName);
-
-    if (!execute) {
-        console.error("No matching command found!");
-        return;
-    }
-
-    try {
-        await execute(interaction);
-    } catch (error) {
-        console.error(error);
-    }
-});
 
 process.on("SIGINT", async () => {
     console.log("Goodbye, Ellsworth!");

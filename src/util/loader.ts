@@ -1,4 +1,5 @@
-import { Config } from "@/types/types.js";
+import { Config, type Command, type CommandHandler } from "@/types/types.js";
+import { Collection } from "discord.js"
 import fs from "fs";
 import path from "path";
 import { load, dump } from "js-toml";
@@ -35,6 +36,16 @@ export function saveConfig(config: Config) {
     } catch (err) {
         console.error(err);
     } 
+}
+
+export function loadCommands(commands: Command[]): Collection<string, CommandHandler> {
+    var commands_collection = new Collection<string, CommandHandler>();
+    
+    for (const command of commands) {
+        commands_collection.set(command.data.name, command.execute);
+    }
+
+    return commands_collection;
 }
 
 function parseObjectRecursive(data: any, key: string, depth: number = 0, parsed: Record<string, any> = {}): any {

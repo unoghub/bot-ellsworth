@@ -1,11 +1,11 @@
-import { Client, type ClientOptions } from "discord.js";
-import type { Config } from "./config.js";
+import { Client, Collection, type ClientOptions } from "discord.js";
+import { type Config, type CommandHandler } from "@/types/types.js";
 
 export class ExtendedClient extends Client {
-    public config: Config
+    config: Config
+    commands: Collection<string, CommandHandler>
 
-    constructor(options: ClientOptions, config: Config) {
+    constructor(options: ClientOptions) {
         super(options);
-        this.config = config;
     }
 }
