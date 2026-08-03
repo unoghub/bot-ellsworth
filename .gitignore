@@ -1,5 +1,5 @@
 .env
-config.ts
+*.toml
 
 node_modules/
 dist/
