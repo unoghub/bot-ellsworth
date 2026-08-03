@@ -1,4 +1,4 @@
-import type { ExtendedClass } from "@/types/client.js";
+import type { ExtendedClient } from "@/types/client.js";
 import { type Command } from "@/types/command.js";
 import { Config } from "@/types/types.js";
 import { SlashCommandBuilder, MessageFlags } from "discord.js";
@@ -30,7 +30,7 @@ export default {
             subcmd => subcmd.setName("save").setDescription("Save new config")
         ),
     async execute(interaction) {
-        const config = (interaction.client as ExtendedClass).config;
+        const config = (interaction.client as ExtendedClient).config;
 
         const key = interaction.options.getString("key");
         const value = interaction.options.getString("value");

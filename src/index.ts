@@ -1,9 +1,9 @@
 import { env } from "./env.js";
 import { Collection, Events, GatewayIntentBits } from "discord.js";
 import commandsIndex from "./commands/index.js";
-import { ExtendedClass, Config, type CommandHandler } from "@/types/types.js";
+import { ExtendedClient, Config, type CommandHandler } from "@/types/types.js";
 
-const client = new ExtendedClass({
+const client = new ExtendedClient({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
