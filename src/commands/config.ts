@@ -6,18 +6,33 @@ export default {
     data: new SlashCommandBuilder()
         .setName('config')
         .setDescription("Null")
-        .addStringOption(option => option.setName("key").setDescription("Null"))
-        .addStringOption(option => option.setName("value").setDescription("Null")),
+        .addSubcommand(
+            subcmd => subcmd.setName("get").setDescription("Get from config")
+                .addStringOption(option => option.setName("key").setDescription("Field key").setRequired(true))
+        )
+        .addSubcommand(
+            subcmd => subcmd.setName("set").setDescription("Set to config")
+        ),
     async execute(interaction) {
-        let key = interaction.options.getString("key");
-        let value = interaction.options.getString("value");
-        if (key && value) {
-            (interaction.client as ExtendedClass).config[key] = value;
+        const config = (interaction.client as ExtendedClass).config;
+        const subcmd = interaction.options.getSubcommand();
 
-            interaction.reply({
-                content: `Updated config. ${key} to ${value}`,
-                flags: MessageFlags.Ephemeral
-            });
+        const key = interaction.options.getString("key");
+        const value = interaction.options.getString("value");
+
+        let message_content = "";
+
+        if (subcmd === "get") {
+            message_content = `Value of ${key} is ${config.get(key!)}`;
         }
+
+        if (subcmd == "set") {
+            message_content = `W.I.P.`;
+        }
+
+        interaction.reply({
+            content: message_content,
+            flags: MessageFlags.Ephemeral
+        });
     },
 } satisfies Command;

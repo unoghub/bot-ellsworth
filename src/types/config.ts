@@ -1,7 +1,13 @@
 export class Config {
-    [key: string]: string | number | boolean;
-
-    cool_channel: string
+    data: Record<string, any>
 
     constructor() {}
+
+    get(key: string): any {
+        return this.data[key];
+    }
+
+    set(key: string, value: any) {
+        this.data[key] = value;
+    }
 }
