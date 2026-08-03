@@ -1,7 +1,19 @@
+import { loadConfig } from "@/util/loader.js";
+
 export class Config {
+
+    static instance: Config
+
     data: Record<string, any>
 
     constructor() {}
+
+    static load(): Config {
+        if (!this.instance) {
+            Config.instance = loadConfig();
+        }
+        return Config.instance;
+    }
 
     get(key: string): any {
         return this.data[key];

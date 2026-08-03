@@ -1,15 +1,12 @@
 import { env } from "../src/env.js";
 import { REST, Routes } from "discord.js";
 import {
-    Command
+    type Command
 } from "../src/types/command.js";
 
 import commandsIndex from "../src/commands/index.js";
 
-const commands = commandsIndex.map((cmd: Command) => {
-    console.log(cmd.data)
-    return cmd.data.toJSON();
-});
+const commands = commandsIndex.map((cmd: Command) => cmd.data.toJSON());
 
 const rest = new REST().setToken(env.TOKEN);
 
