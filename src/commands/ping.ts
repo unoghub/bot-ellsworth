@@ -3,7 +3,7 @@ import { SlashCommandBuilder } from "discord.js";
 
 export default {
   data: new SlashCommandBuilder().setName("ping").setDescription("Check ping."),
-  async execute(interaction, client) {
+  async execute(client, interaction) {
     interaction.reply("Pong!");
   },
 } satisfies Command;
