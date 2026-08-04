@@ -8,8 +8,12 @@ import type { ExtendedClient } from "./client.js";
 export type ButtonHandler = (client: ExtendedClient, interaction: ButtonInteraction<CacheType>)
     => Promise<void>;
 
-export interface Button {
+export class Button {
     name: string;
     builder: ButtonBuilder;
     handle: ButtonHandler;
+
+    constructor(init?: Partial<Button>) {
+        Object.assign(this, init);
+    }
 }

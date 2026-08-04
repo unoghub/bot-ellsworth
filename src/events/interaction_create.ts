@@ -24,6 +24,5 @@ export const event: Event<Events.InteractionCreate> = {
         if (interaction.isChatInputCommand()) {
             commandHandler(client, interaction);
         }
-
     }
 }

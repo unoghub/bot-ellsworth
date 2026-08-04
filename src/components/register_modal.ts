@@ -1,6 +1,8 @@
 import type { ExtendedClient } from "@/types/client.js";
 import type { Modal } from "@/types/modal.js";
-import { LabelBuilder, ModalBuilder, ModalSubmitInteraction, TextChannel, TextInputBuilder, TextInputStyle, type CacheType } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, GuildMember, LabelBuilder, ModalBuilder, ModalSubmitInteraction, PermissionFlagsBits, TextChannel, TextInputBuilder, TextInputStyle, type CacheType, type Channel } from "discord.js";
+import Buttons from "./buttons.js";
+import { registryEmbed } from "./embeds.js";
 
 export default {
     name: "register",
@@ -14,7 +16,7 @@ export default {
                     new TextInputBuilder()
                         .setCustomId("name")
                         .setStyle(TextInputStyle.Short)
-                        .setPlaceholder("isim soyisim")
+                        .setPlaceholder("Ad Soyad")
                 )
         )
         .addLabelComponents(
@@ -58,11 +60,30 @@ export default {
                 )
         ),
     handle: async (client: ExtendedClient, interaction: ModalSubmitInteraction<CacheType>) => {
-        client.channels.fetch(
+
+        const action_row = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+                Buttons.get("registry-approve")!.builder, Buttons.get("registry-reject")!.builder
+            );
+
+        const member = interaction.member as GuildMember;
+
+        const channel = await client.channels.fetch(
             client.config.get("@channels.verification:verification_channel")
-        ).then(channel => {
-            (channel as TextChannel).send("New user registered!");
-            interaction.deferUpdate();
-        })
+        ) as TextChannel;
+
+        channel.send({
+            embeds: [registryEmbed(
+                client.user?.avatarURL()!,
+                member,
+                interaction.fields.getTextInputValue("name"),
+                interaction.fields.getTextInputValue("email"),
+                interaction.fields.getTextInputValue("birthdate"),
+                interaction.fields.getTextInputValue("organization"),
+                interaction.fields.getTextInputValue("origin"),
+            )],
+            components: [action_row]
+        });
+        interaction.deferUpdate();
     }
 } satisfies Modal;

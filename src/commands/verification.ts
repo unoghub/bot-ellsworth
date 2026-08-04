@@ -1,6 +1,6 @@
 import Buttons from "@/components/buttons.js";
 import { type Command } from "@/types/command.js";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, SlashCommandBuilder, TextChannel } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, MessageFlags, SlashCommandBuilder, TextChannel } from "discord.js";
 
 export default {
     data: new SlashCommandBuilder()
