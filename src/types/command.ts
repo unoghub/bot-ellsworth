@@ -2,8 +2,9 @@ import {
     type ChatInputCommandInteraction,
     type SharedSlashCommand,
 } from "discord.js";
+import type { ExtendedClient } from "./client.js";
 
-export type CommandHandler = (interaction: ChatInputCommandInteraction)
+export type CommandHandler = (interaction: ChatInputCommandInteraction, client: ExtendedClient)
     => Promise<void>;
 
 export interface Command {

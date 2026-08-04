@@ -18,7 +18,7 @@ export const event: Event<Events.InteractionCreate> = {
         }
 
         try {
-            await execute(interaction);
+            await execute(interaction, client);
         } catch (error) {
             console.error(error);
         }

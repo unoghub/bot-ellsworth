@@ -15,16 +15,6 @@ export default new ModalBuilder()
     )
     .addLabelComponents(
         new LabelBuilder()
-            .setLabel("Doğum Tarihi")
-            .setTextInputComponent(
-                new TextInputBuilder()
-                    .setCustomId("birthdate")
-                    .setStyle(TextInputStyle.Short)
-                    .setPlaceholder("23.04.1923")
-            )
-    )
-    .addLabelComponents(
-        new LabelBuilder()
             .setLabel("E-posta")
             .setTextInputComponent(
                 new TextInputBuilder()
@@ -35,7 +25,17 @@ export default new ModalBuilder()
     )
     .addLabelComponents(
         new LabelBuilder()
-            .setLabel("İş")
+            .setLabel("Doğum Tarihi")
+            .setTextInputComponent(
+                new TextInputBuilder()
+                    .setCustomId("birthdate")
+                    .setStyle(TextInputStyle.Short)
+                    .setPlaceholder("23.04.1923")
+            )
+    )
+    .addLabelComponents(
+        new LabelBuilder()
+            .setLabel("Bulunduğunuz Kurum/Ekip")
             .setTextInputComponent(
                 new TextInputBuilder()
                     .setCustomId("organization")
@@ -45,11 +45,11 @@ export default new ModalBuilder()
     )
     .addLabelComponents(
         new LabelBuilder()
-            .setLabel("Tecrübe")
+            .setLabel("ÜNOG'u nasıl keşfettiniz?")
             .setTextInputComponent(
                 new TextInputBuilder()
-                    .setCustomId("experience")
-                    .setStyle(TextInputStyle.Paragraph)
-                    .setPlaceholder("Daha önceki tecrübeleriniz")
+                    .setCustomId("origin")
+                    .setStyle(TextInputStyle.Short)
+                    .setPlaceholder("Sosyal medya")
             )
     );
