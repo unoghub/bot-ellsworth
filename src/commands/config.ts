@@ -31,8 +31,8 @@ export default {
         .addSubcommand(
             subcmd => subcmd.setName("save").setDescription("Save new config")
         ),
-    async execute(interaction) {
-        const config = (interaction.client as ExtendedClient).config;
+    async execute(client, interaction) {
+        const config = client.config;
 
         const key = interaction.options.getString("key");
         const value = interaction.options.getString("value");
