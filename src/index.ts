@@ -1,5 +1,5 @@
 import { env } from "./env.js";
-import { GatewayIntentBits, type ClientEvents } from "discord.js";
+import { GatewayIntentBits, Partials, type ClientEvents } from "discord.js";
 import { ExtendedClient, Config, type Event } from "@/types/types.js";
 import { loadCommands } from "./util/loader.js";
 import commands from "./commands/index.js";
@@ -11,6 +11,9 @@ const client = new ExtendedClient({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.MessageContent,
+    ],
+    partials: [
+        Partials.Message
     ]
 });
 
