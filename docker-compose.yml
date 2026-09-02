@@ -1,8 +1,8 @@
+name: pengu
+
 services:
   bot:
-    build: .
-    container_name: unog-bot
-    restart: unless-stopped
-    network_mode: host
+    container_name: pengu-bot
+    build: ./bot
     env_file:
-      - .env
+      - ./bot/.env

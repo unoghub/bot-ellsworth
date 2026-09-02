@@ -1,0 +1,26 @@
+{
+  "name": "pengu-bot",
+  "version": "0.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "FantaLaTone",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node .",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc && tsc-alias"
+  },
+  "dependencies": {
+    "discord.js": "^14.27.0",
+    "dotenv": "^17.4.2",
+    "js-toml": "^2.0.1",
+    "lodash": "^4.18.1",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.25",
+    "tsc-alias": "^1.9.3",
+    "typescript": "^7.0.2"
+  }
+}
