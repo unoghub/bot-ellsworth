@@ -1,6 +1,13 @@
 name: pengu
 
 services:
+  api:
+    container_name: pengu-api
+    build: ./api
+    env_file:
+      - ./api/.env
+    ports:
+      - 5303:5303
   bot:
     container_name: pengu-bot
     build: ./bot
