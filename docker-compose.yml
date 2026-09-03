@@ -13,3 +13,8 @@ services:
     build: ./bot
     env_file:
       - ./bot/.env
+  client:
+    container_name: pengu-client
+    build: ./client
+    ports:
+      - 5173:80

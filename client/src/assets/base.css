@@ -1,0 +1,33 @@
+:root {
+    --dark: #1C1C1C;
+    --light: #FCFCFC;
+    --primary: #F786AA;
+
+    --danger: #D62828;
+    --warning: #FFBE0B;
+    --success: #6A994E;
+}
+
+*,
+*::before,
+*::after {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+
+    font-family: "Google Sans", sans-serif;
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-variation-settings: "GRAD" 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span {
+    color: var(--dark);
+}
