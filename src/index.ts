@@ -1,9 +1,9 @@
-import { env } from "./env.js";
-import { GatewayIntentBits, Partials, type ClientEvents } from "discord.js";
-import { ExtendedClient, Config, type Event } from "@/types/types.js";
-import { loadCommands } from "./util/loader.js";
+import env from "./env.js";
+import { GatewayIntentBits, Partials } from "discord.js";
+import { ExtendedClient } from "@/types/types.js";
 import commands from "./commands/index.js";
 import events from "./events/index.js";
+import { loadCommands } from "./util/loader.js";
 
 const client = new ExtendedClient({
     intents: [
@@ -17,7 +17,6 @@ const client = new ExtendedClient({
     ]
 });
 
-client.config = Config.load();
 client.commands = loadCommands(commands);
 
 for (const event of events) {

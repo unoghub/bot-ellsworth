@@ -1,4 +1,5 @@
 
+import config from "@/types/config.js";
 import { ExtendedClient, type Event } from "@/types/types.js";
 import { Events, TextChannel, type Message, type PartialMessage, type OmitPartialGroupDMChannel, type Channel } from "discord.js";
 
@@ -11,9 +12,9 @@ export const event: Event<Events.MessageUpdate> = {
         const client = newMessage.client as ExtendedClient;
 
         const announcementOriginChannelId =
-            client.config.get("@channels.announcement:announcement_origin_channel");
+            config.ANNOUNCEMENT_ORIGIN;
         const announcementMirrorChannelId =
-            client.config.get("@channels.announcement:announcement_mirror_channel");
+            config.ANNOUNCEMENT_MIRROR;
 
         const updatingMessageChannelId = newMessage.channelId;
 

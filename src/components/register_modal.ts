@@ -3,6 +3,7 @@ import type { Modal } from "@/types/modal.js";
 import { ActionRowBuilder, ButtonBuilder, GuildMember, LabelBuilder, MessageFlags, ModalBuilder, ModalSubmitInteraction, PermissionFlagsBits, PermissionsBitField, TextChannel, TextInputBuilder, TextInputStyle, type CacheType, type Channel } from "discord.js";
 import Buttons from "./buttons.js";
 import { registryEmbed } from "./embeds.js";
+import config from "@/types/config.js";
 
 export default {
     name: "register",
@@ -81,9 +82,6 @@ export default {
         if (email.toLowerCase().match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/) == null) {
             error += "Hatalı e-posta!";
         }
-        if (isNaN(new Date(birthdate).getTime())) {
-            error += "Hatalı doğum tarihi!";
-        }
 
         if (error != "") {
             await member.send({
@@ -94,7 +92,7 @@ export default {
         }
 
         const channel = await client.channels.fetch(
-            client.config.get("@channels.verification:verification_channel")
+            config.VERIFICATION_CHANNEL
         ) as TextChannel;
 
         channel.send({

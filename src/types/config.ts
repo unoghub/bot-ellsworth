@@ -1,29 +1,14 @@
-import { loadConfig, saveConfig } from "@/util/loader.js";
+import zod from "zod";
 
-export class Config {
+const configSchema = zod.object({
+    VERIFIED_ROLE: zod.string(),
+    VERIFIER_ROLE: zod.string(),
+    NEW_COMER_ROLE: zod.string(),
 
-    static instance: Config
+    ANNOUNCEMENT_ORIGIN: zod.string(),
+    ANNOUNCEMENT_MIRROR: zod.string(),
 
-    data: Record<string, any>
+    VERIFICATION_CHANNEL: zod.string()
+});
 
-    constructor() {}
-
-    static load(): Config {
-        if (!this.instance) {
-            Config.instance = loadConfig();
-        }
-        return Config.instance;
-    }
-
-    static save(): void {
-        saveConfig(Config.instance);
-    }
-
-    get(key: string): any {
-        return this.data[key];
-    }
-
-    set(key: string, value: any) {
-        this.data[key] = value;
-    }
-}
+export default configSchema.parse(process.env);
