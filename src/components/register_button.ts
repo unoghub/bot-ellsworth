@@ -1,7 +1,8 @@
 import type { ExtendedClient } from "@/types/client.js";
 import { Button } from "@/types/button.js";
-import { ButtonBuilder, ButtonInteraction, ButtonStyle, TextChannel, type CacheType } from "discord.js";
+import { ButtonBuilder, ButtonInteraction, ButtonStyle, type CacheType } from "discord.js";
 import Modals from "./modals.js";
+import config from "@/types/config.js";
 
 export const registryApproveButton = new Button({
     name: "registry-approve",
@@ -11,7 +12,7 @@ export const registryApproveButton = new Button({
         .setStyle(ButtonStyle.Success),
     handle: async (client: ExtendedClient, interaction: ButtonInteraction<CacheType>) => {
         
-        const verifiedRoleId = client.config.get("@roles.verification:verified");
+        const verifiedRoleId = config.VERIFIED_ROLE;
         const verifiedRole = await interaction.guild?.roles.fetch(verifiedRoleId);
 
         const regex = /[0-9]+/i
